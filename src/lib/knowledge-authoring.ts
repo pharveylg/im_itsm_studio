@@ -82,7 +82,7 @@ export function knowledgeSystemPrompt() {
     "",
     "METADATA OVERRIDE RULES:",
     "- Analyze the content and suggest the most appropriate metadata values.",
-    -" If the user-provided article type, category, KB, or audience doesn't fit the content, suggest better values.",
+    "- If the user-provided article type, category, KB, or audience doesn't fit the content, suggest better values.",
     "- Return suggested overrides in a 'suggestedMetadata' object with your recommendations.",
     "- Only suggest overrides when you have high confidence the new value is more accurate.",
     "",
