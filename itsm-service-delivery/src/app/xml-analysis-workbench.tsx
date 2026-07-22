@@ -3,13 +3,8 @@
 import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import { GuidelinesManager } from "@/components/guidelines-manager";
 import { ReportRenderer } from "@/components/report-renderer";
-import { FinalReport } from "@/components/final-report";
 import { ITSM_MODULES, CORE_ITSM_MODULE_KEYS, type ItsmModuleKey } from "@/lib/itsm-modules";
-import {
-  ITSM_ANALYSIS_TABS,
-  MI_COMMS_TABS,
-  type ReportReviewState,
-} from "@/lib/report-output";
+import { ITSM_ANALYSIS_TABS, MI_COMMS_TABS } from "@/lib/report-output";
 
 const DEFAULT_GUIDELINES = `Optional freeform notes for this run.
 
@@ -213,8 +208,6 @@ export function XmlAnalysisWorkbench() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [copied, setCopied] = useState(false);
-  const [reviewState, setReviewState] = useState<ReportReviewState>({});
-  const [showFinalReport, setShowFinalReport] = useState(false);
   const [providers, setProviders] = useState<AiProviderOption[]>([]);
   const [selectedGuidelineIds, setSelectedGuidelineIds] = useState<string[]>([]);
   const [scopedModules, setScopedModules] = useState<ItsmModuleKey[]>([]);
@@ -394,8 +387,6 @@ export function XmlAnalysisWorkbench() {
 
     setIsAnalyzing(true);
     setResult(null);
-    setReviewState({});
-    setShowFinalReport(false);
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
@@ -940,15 +931,8 @@ export function XmlAnalysisWorkbench() {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowFinalReport(true)}
-                      className="rounded-full bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800"
-                    >
-                      Produce Finalized Report
-                    </button>
-                    <button type="button" onClick={copyAnalysis} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">{copied ? "Copied" : "Copy Raw"}</button>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={copyAnalysis} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">{copied ? "Copied" : "Copy"}</button>
                     <button type="button" onClick={downloadAnalysis} className="rounded-full bg-slate-950 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800">Download .md</button>
                   </div>
                 </div>
@@ -956,8 +940,6 @@ export function XmlAnalysisWorkbench() {
                   <ReportRenderer
                     rawText={result.analysis}
                     tabs={result.analysisMode === "mi_comms" ? MI_COMMS_TABS : ITSM_ANALYSIS_TABS}
-                    reviewState={reviewState}
-                    onReviewStateChange={setReviewState}
                   />
                 </div>
               </section>
@@ -977,21 +959,6 @@ export function XmlAnalysisWorkbench() {
                   </div>
                 </div>
               </div>
-            )}
-
-            {showFinalReport && result?.analysis && (
-              <FinalReport
-                rawText={result.analysis}
-                tabs={result.analysisMode === "mi_comms" ? MI_COMMS_TABS : ITSM_ANALYSIS_TABS}
-                reviewState={reviewState}
-                context={result.context}
-                communications={result.communications}
-                analysisMode={result.analysisMode ?? analysisMode}
-                provider={result.provider}
-                model={result.model}
-                analyzedAt={result.analyzedAt}
-                onClose={() => setShowFinalReport(false)}
-              />
             )}
           </section>
         </div>

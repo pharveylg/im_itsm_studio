@@ -1,6 +1,5 @@
 import MsgReader from "@kenjiuno/msgreader";
 import PostalMime, { type Address } from "postal-mime";
-import { moduleScopeInstruction, type ItsmModuleKey } from "@/lib/itsm-modules";
 
 export type AnalysisMode = "itsm" | "mi_comms";
 
@@ -245,7 +244,7 @@ export function miCommsSystemPrompt() {
     "Respond with ONLY the following tagged blocks, in this exact order, with no other preamble or commentary:",
     "",
     "[EVIDENCE_SCOPE]",
-    "List supplied records, communications, date range, and material evidence gaps ONLY for modules allowed by MODULE SCOPE RESTRICTION. Do not name, count, or describe excluded module records. Communications evidence remains in scope for MI Comms Analysis. Each line starts with a flag token.",
+    "List supplied records, communications, date range, and material evidence gaps. Each line starts with a flag token.",
     "[/EVIDENCE_SCOPE]",
     "",
     "[EXEC_ASSESSMENT]",
@@ -253,15 +252,11 @@ export function miCommsSystemPrompt() {
     "[/EXEC_ASSESSMENT]",
     "",
     "[HANDLING_TIMELINE]",
-    "Chronological HTML <table>: Date & Time, Elapsed, Event, Source, Assessment. Render every date as 'DD Mon YYYY, HH:mm TZ' and elapsed duration as '45m', '2h 15m', or '1d 3h'. Never expose raw ISO timestamps when parseable.",
+    "Chronological HTML <table>: Timestamp, Elapsed, Event, Source, Assessment.",
     "[/HANDLING_TIMELINE]",
     "",
-    "[MIM_HANDOVERS]",
-    "Real HTML <table> for every evidenced MIM handover/changeover. Columns: Handover Date & Time, Outgoing MIM, Incoming MIM, Handover Evidence/Source, Communication Sent By, Communication Subject/Type, Communication Date & Time, Notes. Render dates as 'DD Mon YYYY, HH:mm TZ'. If no handover is evidenced, include one row stating 'No MIM handover evidenced' and identify the evidence gap. Do not infer names without evidence.",
-    "[/MIM_HANDOVERS]",
-    "",
     "[COMMS_TIMELINE]",
-    "Communications SLA HTML <table>: Communication, Sent, Sender/MIM, Recipients, Trigger, Required Deadline, Actual Elapsed, Variance, Pass/Fail, Evidence. Render dates as 'DD Mon YYYY, HH:mm TZ' and durations in human-readable units.",
+    "Communications SLA HTML <table>: Communication, Sent, Trigger, Required Deadline, Actual Elapsed, Variance, Pass/Fail, Evidence.",
     "[/COMMS_TIMELINE]",
     "",
     "[STAKEHOLDER_COVERAGE]",
@@ -271,10 +266,6 @@ export function miCommsSystemPrompt() {
     "[MESSAGE_QUALITY]",
     "Assess accuracy, clarity, business impact, affected service, actions/workaround, owner, next-update commitment, cadence, restoration/closure. Each line starts with a flag token.",
     "[/MESSAGE_QUALITY]",
-    "",
-    "[ITIL_COMMENTARY]",
-    "For each material OBSERVATION in this report, add an ITIL 4 best-practice comment. Keep the original OBSERVATION and its paired RECOMMENDATION together with no blank line. Name the applicable practice and explain the relationship. Do not represent ITIL guidance as an exact SLA unless that SLA exists in supplied governance.",
-    "[/ITIL_COMMENTARY]",
     "",
     "[HANDLING_GOVERNANCE]",
     "Declaration, ownership, bridge, escalation, technical handling, restoration, problem/change follow-through. Each line starts with a flag token.",
@@ -302,7 +293,6 @@ export function miCommsSystemPrompt() {
 export function miCommsUserPrompt(options: {
   guidelines: string;
   focus?: string;
-  scopedModules?: ItsmModuleKey[];
   itsmContext: string;
   communications: CommunicationsContext;
 }) {
@@ -313,7 +303,6 @@ export function miCommsUserPrompt(options: {
     "ADDITIONAL REVIEW FOCUS:",
     options.focus?.trim() || "Review end-to-end major incident handling and stakeholder communications.",
     "",
-    moduleScopeInstruction(options.scopedModules),
     "SERVICENOW RECORD EVIDENCE:",
     options.itsmContext,
     "",

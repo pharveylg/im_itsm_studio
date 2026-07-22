@@ -121,9 +121,8 @@ async function callAnthropic(
     },
     body: JSON.stringify({
       model: config.model,
-      max_tokens: request.maxTokens ?? config.maxTokens ?? 16_000,
+      max_tokens: request.maxTokens ?? config.maxTokens ?? 4000,
       temperature: request.temperature ?? config.temperature ?? 0.2,
-      thinking: { type: "disabled" },
       system: request.systemPrompt,
       messages: [{ role: "user", content: request.userPrompt }],
     }),

@@ -208,6 +208,6 @@ export function moduleCoveragePromptBlock(scopedModules?: ItsmModuleKey[]) {
 
 export function moduleScopeInstruction(scopedModules?: ItsmModuleKey[]): string {
   if (!scopedModules?.length) return "";
-  const labels = scopedModules.map((key) => ITSM_MODULES[key]?.label ?? key).join(", ");
-  return `\nMODULE SCOPE RESTRICTION (STRICT ALLOW-LIST):\nAnalyze ONLY these modules: ${labels}.\nAcross every output block—including evidence/scope, overview, timelines, counts, gaps, findings, correlations, and recommendations—do not list, summarize, score, or mention modules outside this list.\nExcluded-module files may be used only as silent background context when needed to interpret an in-scope fact; never expose excluded-module findings in the report.\n`;
+  const labels = scopedModules.map((k) => ITSM_MODULES[k]?.label ?? k).join(", ");
+  return `\nMODULE SCOPE RESTRICTION:\nLimit the analysis to ONLY these modules: ${labels}.\nDo not produce findings, recommendations, or coverage assessments for modules outside this list.\nIf the XML contains data for excluded modules, note it briefly under a single 'Out of Scope' line but do not analyze it.\n`;
 }

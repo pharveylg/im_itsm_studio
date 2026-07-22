@@ -9,7 +9,7 @@ import {
   buildAnalysisContext,
   type XmlDocumentInput,
 } from "@/lib/xml-analysis";
-import { ITSM_MODULES, CORE_ITSM_MODULE_KEYS, type ItsmModuleKey } from "@/lib/itsm-modules";
+import type { ItsmModuleKey } from "@/lib/itsm-modules";
 import { callProvider, estimateCost } from "@/lib/ai-adapters";
 import {
   getDefaultProvider,
@@ -45,50 +45,6 @@ type AnalyzeRequest = {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120; // Vercel Pro: allow up to 2 min for large AI calls
-
-function replaceTaggedBlock(text: string, tag: string, content: string): string {
-  const complete = new RegExp(`\\[${tag}\\][\\s\\S]*?\\[\\/${tag}\\]`, "i");
-  const replacement = `[${tag}]\n${content.trim()}\n[/${tag}]`;
-  if (complete.test(text)) return text.replace(complete, replacement);
-  return `${text.trim()}\n\n${replacement}`;
-}
-
-function deterministicEvidenceScope(
-  context: ReturnType<typeof buildAnalysisContext>,
-  scopedModules: ItsmModuleKey[] | undefined,
-  emailCount: number,
-): string {
-  const scope = scopedModules?.length ? scopedModules : CORE_ITSM_MODULE_KEYS;
-  const lines: string[] = [
-    `EVIDENCE: Analysis scope is limited to ${scope.map((key) => ITSM_MODULES[key].label).join(", ")}.`,
-  ];
-
-  for (const document of context.documents) {
-    const matched = document.likelyModules.filter((key) => scope.includes(key));
-    if (!matched.length) continue;
-    lines.push(
-      `EVIDENCE: ${document.name} — ${document.recordCount} detected record${document.recordCount === 1 ? "" : "s"}; in-scope classification: ${matched.map((key) => ITSM_MODULES[key].label).join(", ")}.`,
-    );
-  }
-
-  if (emailCount > 0) {
-    lines.push(`EVIDENCE: ${emailCount} stakeholder communication email${emailCount === 1 ? "" : "s"} supplied for communications review.`);
-  }
-
-  for (const key of scope) {
-    if (!context.detectedModules.includes(key)) {
-      lines.push(`UNKNOWN: No ${ITSM_MODULES[key].label} evidence was detected in the supplied packet.`);
-    }
-  }
-
-  return lines.join("\n\n");
-}
-
-function ensureMimHandoverBlock(text: string): string {
-  if (/\[MIM_HANDOVERS\]/i.test(text)) return text;
-  const table = `<table style="width:100%;table-layout:fixed;"><thead><tr><th>Handover Date & Time</th><th>Outgoing MIM</th><th>Incoming MIM</th><th>Evidence / Source</th><th>Communication Sent By</th><th>Communication Subject / Type</th><th>Communication Date & Time</th><th>Notes</th></tr></thead><tbody><tr><td>Not evidenced</td><td>Not evidenced</td><td>Not evidenced</td><td>No explicit MIM handover/changeover was identified</td><td>Not evidenced</td><td>Not evidenced</td><td>Not evidenced</td><td>Human validation required</td></tr></tbody></table>`;
-  return `${text.trim()}\n\n[MIM_HANDOVERS]\n${table}\n[/MIM_HANDOVERS]`;
-}
 
 export async function POST(request: Request) {
   try {
@@ -193,12 +149,11 @@ export async function POST(request: Request) {
           userPrompt: miCommsUserPrompt({
             guidelines: guidelineBundle.text,
             focus: body.focus,
-            scopedModules,
             itsmContext: body.includeRaw ? context.rawContext : context.structuredContext,
             communications,
           }),
           temperature: providerConfig.temperature,
-          maxTokens: Math.max(providerConfig.maxTokens ?? 0, 16_000),
+          maxTokens: providerConfig.maxTokens,
           documentCount: documents.length + communications.emails.length,
           estimatedTokens: Math.ceil(
             (guidelineBundle.text.length + JSON.stringify(context).length + communications.promptContext.length) / 4,
@@ -214,24 +169,13 @@ export async function POST(request: Request) {
             scopedModules,
           ),
           temperature: providerConfig.temperature,
-          maxTokens: Math.max(providerConfig.maxTokens ?? 0, 16_000),
+          maxTokens: providerConfig.maxTokens,
           documentCount: documents.length,
           estimatedTokens: Math.ceil((guidelineBundle.text.length + JSON.stringify(context).length) / 4),
         };
 
     // Call the selected provider
     const result = await callProvider(providerConfig, analysisRequest);
-
-    // Enforce deterministic scope evidence and required MI handover structure.
-    let reportText = result.text;
-    if (analysisMode === "mi_comms") {
-      reportText = replaceTaggedBlock(
-        reportText,
-        "EVIDENCE_SCOPE",
-        deterministicEvidenceScope(context, scopedModules, communications?.emails.length ?? 0),
-      );
-      reportText = ensureMimHandoverBlock(reportText);
-    }
 
     // Calculate cost estimate
     const costEstimate = result.usage
@@ -242,7 +186,7 @@ export async function POST(request: Request) {
       ok: true,
       provider: result.provider,
       model: result.model,
-      analysis: reportText,
+      analysis: result.text,
       analysisMode,
       scopedModules: scopedModules ?? null,
       context: publicContext,

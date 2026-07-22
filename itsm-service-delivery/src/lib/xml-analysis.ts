@@ -76,14 +76,6 @@ const RECORD_FIELDS = new Set([
   // major incident / incident operations
   "major_incident_state",
   "business_impact",
-  "u_business_impact",
-  "location",
-  "region",
-  "u_region",
-  "business_service",
-  "service_offering",
-  "resolution_summary",
-  "resolution_notes",
   "communication_plan",
   "work_notes",
   "close_notes",
@@ -390,7 +382,7 @@ export function analysisSystemPrompt(scopedModules?: ItsmModuleKey[]) {
     "Respond with ONLY the following tagged blocks, in this exact order, with no other preamble or commentary:",
     "",
     "[OVERVIEW]",
-    "Key record identifiers and facts ONLY for modules included in the active module scope. Do not list excluded module records, counts, gaps, or evidence. Use real HTML <table> for structured data.",
+    "Key record identifiers and facts extracted deterministically. Use real HTML <table> for structured data.",
     "[/OVERVIEW]",
     "",
     "[EXEC_SUMMARY]",
@@ -402,17 +394,12 @@ export function analysisSystemPrompt(scopedModules?: ItsmModuleKey[]) {
     "[/MODULE_FINDINGS]",
     "",
     "[TIMELINE]",
-    "Chronological table of events using real HTML <table> markup. Columns: Date & Time, Elapsed, Event, Source, Assessment.",
-    "Render every date as 'DD Mon YYYY, HH:mm TZ' (example: 22 Jul 2026, 14:30 UTC). Render elapsed durations as '45m', '2h 15m', or '1d 3h'. Never expose raw ISO timestamps when a date is parseable.",
+    "Chronological table of events using real HTML <table> markup. Columns: Timestamp, Elapsed, Event, Source, Assessment.",
     "[/TIMELINE]",
     "",
     "[CORRELATIONS]",
-    "Cross-module relationships and handoffs, limited to selected modules. Each finding starts with a flag token.",
+    "Cross-module relationships and handoffs. Each finding starts with a flag token.",
     "[/CORRELATIONS]",
-    "",
-    "[ITIL_COMMENTARY]",
-    "For each material OBSERVATION in the report, provide a corresponding ITIL 4 best-practice comment. Use OBSERVATION first, then RECOMMENDATION immediately after it with no blank line. Identify the applicable practice (for example Incident Management, Problem Management, Change Enablement, Service Level Management, Knowledge Management, or Continual Improvement). Do not claim that ITIL prescribes an exact SLA unless the supplied governance does.",
-    "[/ITIL_COMMENTARY]",
     "",
     "[RISKS_GAPS]",
     "Risks, gaps, contradictions, and breaches. Each line starts with RISK, BREACH, or UNKNOWN.",
@@ -444,7 +431,7 @@ export function analysisUserPrompt(
   const contextText = includeRaw ? context.rawContext : context.structuredContext;
   const scopeBlock = moduleScopeInstruction(scopedModules);
   const closing = scopedModules?.length
-    ? "Produce the analysis now. Treat the module scope as a strict allow-list across EVERY block, including OVERVIEW/evidence and scope. Do not list, score, summarize, count, or identify gaps for excluded modules, even when their files are present. Do not mention these prompt instructions in the output."
+    ? "Produce the analysis now. Cover ONLY the modules specified in the scope restriction. Do not mention these prompt instructions in the output."
     : "Produce the analysis now. Cover each major ITSM module that is relevant or explicitly mark it as not evidenced. Do not mention these prompt instructions in the output.";
 
   return [

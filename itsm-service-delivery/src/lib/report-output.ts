@@ -90,85 +90,12 @@ export type PointGroup = {
   lines: ParsedLine[];
 };
 
-export type ReviewDecision = "valid" | "invalid" | "ignore";
-
-export type ReviewComment = {
-  id: string;
-  author: string;
-  text: string;
-  createdAt: string;
-};
-
-export type ReviewItemState = {
-  decision?: ReviewDecision;
-  comments: ReviewComment[];
-};
-
-export type ReportReviewState = Record<string, ReviewItemState>;
-
-export function reportPointId(tag: string, index: number): string {
-  return `${tag}:${index}`;
-}
-
 /** Group lines into point-groups: tied lines (no blank separator) stay together. */
 export function groupPoints(content: string): PointGroup[] {
   const rawGroups = content.split(/\n\s*\n/).map((chunk) => chunk.trim()).filter(Boolean);
   return rawGroups.map((chunk) => ({
     lines: chunk.split("\n").map((line) => parseFlagLine(line)).filter((l) => l.text),
   }));
-}
-
-/** Escape reviewer-authored text before inserting it into export HTML. */
-export function escapeReportHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-export function formatReportDate(value: string): string {
-  const raw = value.trim();
-  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(raw)
-    ? `${raw.replace(" ", "T")}Z`
-    : raw;
-  const date = new Date(normalized);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZoneName: "short",
-  }).format(date);
-}
-
-/**
- * Make model-produced tables readable and safe enough for the report surface.
- * This removes executable markup and humanizes ISO / ServiceNow timestamps.
- */
-export function normalizeReportHtml(value: string): string {
-  let html = fixMarkdownTables(value)
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
-    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*')/gi, "")
-    .replace(/javascript:/gi, "");
-
-  html = html.replace(
-    /\b(\d{4}-\d{2}-\d{2}(?:T|\s)\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)\b/g,
-    (match) => formatReportDate(match),
-  );
-
-  return html.replace(
-    /<table(?![^>]*style=)/gi,
-    '<table style="width:100%;table-layout:fixed;border-collapse:collapse;"',
-  ).replace(
-    /<(td|th)(?![^>]*style=)/gi,
-    '<$1 style="word-wrap:break-word;padding:8px;border:1px solid #d2dcc3;vertical-align:top;"',
-  );
 }
 
 // ── Checklist Parsing ──
@@ -245,29 +172,26 @@ export type ReportTab = {
 };
 
 export const ITSM_ANALYSIS_TABS: ReportTab[] = [
-  { id: "overview",     label: "01 · Overview",             tag: "OVERVIEW" },
-  { id: "exec",         label: "02 · Executive Summary",    tag: "EXEC_SUMMARY" },
-  { id: "modules",      label: "03 · Module Findings",      tag: "MODULE_FINDINGS" },
-  { id: "timeline",     label: "04 · Timeline",             tag: "TIMELINE" },
-  { id: "correlations", label: "05 · Cross-Module",         tag: "CORRELATIONS" },
-  { id: "itil",         label: "06 · ITIL Commentary",      tag: "ITIL_COMMENTARY" },
-  { id: "risks",        label: "07 · Risks & Gaps",         tag: "RISKS_GAPS" },
-  { id: "actions",      label: "08 · Recommended Actions",  tag: "ACTIONS" },
-  { id: "review",       label: "09 · Review Items",         tag: "REVIEW_ITEMS" },
-  { id: "confidence",   label: "10 · Confidence",           tag: "CONFIDENCE" },
+  { id: "overview",     label: "01 · Overview",            tag: "OVERVIEW" },
+  { id: "exec",         label: "02 · Executive Summary",   tag: "EXEC_SUMMARY" },
+  { id: "modules",      label: "03 · Module Findings",     tag: "MODULE_FINDINGS" },
+  { id: "timeline",     label: "04 · Timeline",            tag: "TIMELINE" },
+  { id: "correlations", label: "05 · Cross-Module",        tag: "CORRELATIONS" },
+  { id: "risks",        label: "06 · Risks & Gaps",        tag: "RISKS_GAPS" },
+  { id: "actions",      label: "07 · Recommended Actions",  tag: "ACTIONS" },
+  { id: "review",       label: "08 · Review Items",         tag: "REVIEW_ITEMS" },
+  { id: "confidence",   label: "09 · Confidence",           tag: "CONFIDENCE" },
 ];
 
 export const MI_COMMS_TABS: ReportTab[] = [
-  { id: "overview",       label: "01 · Evidence & Scope",       tag: "EVIDENCE_SCOPE" },
-  { id: "exec",           label: "02 · Executive Assessment",   tag: "EXEC_ASSESSMENT" },
-  { id: "handling",       label: "03 · Handling Timeline",      tag: "HANDLING_TIMELINE" },
-  { id: "handovers",      label: "04 · MIM Handovers",          tag: "MIM_HANDOVERS" },
-  { id: "comms-timeline", label: "05 · Comms SLA",              tag: "COMMS_TIMELINE" },
-  { id: "stakeholders",   label: "06 · Stakeholder Coverage",   tag: "STAKEHOLDER_COVERAGE" },
-  { id: "quality",        label: "07 · Message Quality",        tag: "MESSAGE_QUALITY" },
-  { id: "itil",           label: "08 · ITIL Commentary",        tag: "ITIL_COMMENTARY" },
-  { id: "governance",     label: "09 · Handling Governance",    tag: "HANDLING_GOVERNANCE" },
-  { id: "findings",       label: "10 · Governance Findings",    tag: "GOVERNANCE_FINDINGS" },
-  { id: "actions",        label: "11 · Corrective Actions",     tag: "CORRECTIVE_ACTIONS" },
-  { id: "validation",     label: "12 · Validation",             tag: "VALIDATION" },
+  { id: "overview",       label: "01 · Evidence & Scope",         tag: "EVIDENCE_SCOPE" },
+  { id: "exec",           label: "02 · Executive Assessment",     tag: "EXEC_ASSESSMENT" },
+  { id: "handling",       label: "03 · Handling Timeline",        tag: "HANDLING_TIMELINE" },
+  { id: "comms-timeline", label: "04 · Comms SLA",                tag: "COMMS_TIMELINE" },
+  { id: "stakeholders",   label: "05 · Stakeholder Coverage",     tag: "STAKEHOLDER_COVERAGE" },
+  { id: "quality",        label: "06 · Message Quality",          tag: "MESSAGE_QUALITY" },
+  { id: "governance",     label: "07 · Handling Governance",      tag: "HANDLING_GOVERNANCE" },
+  { id: "findings",       label: "08 · Governance Findings",      tag: "GOVERNANCE_FINDINGS" },
+  { id: "actions",        label: "09 · Corrective Actions",       tag: "CORRECTIVE_ACTIONS" },
+  { id: "validation",     label: "10 · Validation",               tag: "VALIDATION" },
 ];
