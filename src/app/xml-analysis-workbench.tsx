@@ -2,6 +2,9 @@
 
 import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import { GuidelinesManager } from "@/components/guidelines-manager";
+import { ReportRenderer } from "@/components/report-renderer";
+import { ITSM_MODULES, CORE_ITSM_MODULE_KEYS, type ItsmModuleKey } from "@/lib/itsm-modules";
+import { ITSM_ANALYSIS_TABS, MI_COMMS_TABS } from "@/lib/report-output";
 
 const DEFAULT_GUIDELINES = `Optional freeform notes for this run.
 
@@ -82,6 +85,7 @@ type AnalyzeResponse = {
   error?: string;
   analysis?: string;
   analysisMode?: AnalysisMode;
+  scopedModules?: string[] | null;
   provider?: string;
   model?: string;
   analyzedAt?: string;
@@ -168,40 +172,7 @@ function kindBadge(kind: string) {
   }
 }
 
-function MarkdownOutput({ markdown }: { markdown: string }) {
-  const blocks = markdown.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
-
-  return (
-    <div className="space-y-5 text-[15px] leading-7 text-slate-700">
-      {blocks.map((block, index) => {
-        const lines = block.split("\n").map((line) => line.trimEnd());
-        const first = lines[0] ?? "";
-        if (/^#{1,3}\s/.test(first)) {
-          return <h3 key={index} className="text-xl font-black text-slate-950">{first.replace(/^#{1,3}\s+/, "")}</h3>;
-        }
-
-        if (lines.every((line) => /^[-*]\s+/.test(line) || /^\d+[.)]\s+/.test(line))) {
-          return (
-            <ul key={index} className="space-y-2 pl-5 marker:text-sky-500">
-              {lines.map((line, lineIndex) => <li key={lineIndex}>{line.replace(/^(?:[-*]|\d+[.)])\s+/, "")}</li>)}
-            </ul>
-          );
-        }
-
-        return (
-          <p key={index} className="whitespace-pre-wrap">
-            {lines.map((line, lineIndex) => (
-              <span key={lineIndex}>
-                {line}
-                {lineIndex < lines.length - 1 && <br />}
-              </span>
-            ))}
-          </p>
-        );
-      })}
-    </div>
-  );
-}
+/* MarkdownOutput removed — replaced by ReportRenderer with tagged blocks */
 
 function Stat({ label, value, tone = "slate" }: { label: string; value: string | number; tone?: "slate" | "sky" | "emerald" | "amber" }) {
   const tones = {
@@ -239,6 +210,7 @@ export function XmlAnalysisWorkbench() {
   const [copied, setCopied] = useState(false);
   const [providers, setProviders] = useState<AiProviderOption[]>([]);
   const [selectedGuidelineIds, setSelectedGuidelineIds] = useState<string[]>([]);
+  const [scopedModules, setScopedModules] = useState<ItsmModuleKey[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<string>("default");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -430,6 +402,7 @@ export function XmlAnalysisWorkbench() {
           analysisMode,
           guidelines,
           guidelineIds: selectedGuidelineIds,
+          scopedModules: scopedModules.length > 0 ? scopedModules : undefined,
           focus,
           includeRaw,
           provider: selectedProvider === "default" ? undefined : selectedProvider,
@@ -676,6 +649,66 @@ export function XmlAnalysisWorkbench() {
                  <span className="text-sm font-bold text-slate-700">Optional freeform notes</span>
                  <textarea value={guidelines} onChange={(event) => setGuidelines(event.target.value)} rows={4} className="mt-2 w-full resize-y rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 outline-none ring-sky-500 focus:ring-4" />
                </label>
+
+               {/* Module scope */}
+               <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+                 <div className="flex items-center justify-between">
+                   <span className="text-sm font-bold text-slate-700">Module scope</span>
+                   {scopedModules.length > 0 && scopedModules.length < CORE_ITSM_MODULE_KEYS.length ? (
+                     <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-700">
+                       {scopedModules.length} of {CORE_ITSM_MODULE_KEYS.length} selected
+                     </span>
+                   ) : (
+                     <button
+                       type="button"
+                       onClick={() => setScopedModules([])}
+                       className="text-[10px] font-bold text-slate-400 hover:text-slate-600"
+                     >
+                       All modules
+                     </button>
+                   )}
+                 </div>
+                 <p className="mt-1 text-xs text-slate-500">
+                   {scopedModules.length === 0
+                     ? "All modules will be covered. Tick specific modules to limit the analysis."
+                     : "Only ticked modules will be analyzed. Untick all to cover everything."}
+                 </p>
+                 <div className="mt-3 grid grid-cols-2 gap-2">
+                   {CORE_ITSM_MODULE_KEYS.map((key) => {
+                     const module = ITSM_MODULES[key];
+                     const checked = scopedModules.includes(key);
+                     return (
+                       <label
+                         key={key}
+                         className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-2.5 transition-all ${
+                           checked
+                             ? "border-sky-300 bg-sky-50"
+                             : "border-slate-200 bg-slate-50 hover:border-slate-300"
+                         }`}
+                       >
+                         <input
+                           type="checkbox"
+                           checked={checked}
+                           onChange={() => {
+                             setScopedModules((prev) =>
+                               prev.includes(key)
+                                 ? prev.filter((k) => k !== key)
+                                 : [...prev, key]
+                             );
+                           }}
+                           className="mt-0.5 size-3.5 rounded border-slate-300"
+                         />
+                         <span>
+                           <span className={`block text-xs font-bold ${checked ? "text-sky-800" : "text-slate-700"}`}>
+                             {module.shortLabel}
+                           </span>
+                         </span>
+                       </label>
+                     );
+                   })}
+                 </div>
+               </div>
+
                <label className="mt-4 block">
                  <span className="text-sm font-bold text-slate-700">Optional focus for this run</span>
                  <input value={focus} onChange={(event) => setFocus(event.target.value)} placeholder="e.g. Score this against the major-incident review checklist and call out SLA evidence gaps." className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none ring-sky-500 focus:ring-4" />
@@ -861,7 +894,19 @@ export function XmlAnalysisWorkbench() {
                 <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-700">AI review output</p>
-                    <h2 className="mt-2 text-3xl font-black text-slate-950">Operational analysis</h2>
+                    <h2 className="mt-2 text-3xl font-black text-slate-950">
+                      {result.analysisMode === "mi_comms" ? "MI Comms Analysis" : "Operational analysis"}
+                    </h2>
+                    {result.scopedModules && result.scopedModules.length > 0 && (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Scope:</span>
+                        {result.scopedModules.map((m) => (
+                          <span key={m} className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-800">
+                            {m.replace(/_/g, " ")}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
                         {(result as { provider?: string }).provider || "unknown"}
@@ -891,7 +936,12 @@ export function XmlAnalysisWorkbench() {
                     <button type="button" onClick={downloadAnalysis} className="rounded-full bg-slate-950 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800">Download .md</button>
                   </div>
                 </div>
-                <div className="mt-7"><MarkdownOutput markdown={result.analysis} /></div>
+                <div className="mt-7">
+                  <ReportRenderer
+                    rawText={result.analysis}
+                    tabs={result.analysisMode === "mi_comms" ? MI_COMMS_TABS : ITSM_ANALYSIS_TABS}
+                  />
+                </div>
               </section>
             ) : !result?.context && (
               <div className="grid min-h-[650px] place-items-center rounded-[2rem] border border-dashed border-slate-300 bg-white/65 p-10 text-center shadow-sm">

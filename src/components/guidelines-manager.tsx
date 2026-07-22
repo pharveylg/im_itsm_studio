@@ -58,45 +58,47 @@ export function GuidelinesManager({
       return;
     }
 
+    const file = fileInput.files[0];
+    const ext = file.name.toLowerCase().split(".").pop() ?? "";
+    const allowed = ["xml", "docx", "pdf", "txt", "md", "markdown"];
+    if (!allowed.includes(ext)) {
+      setError(`Unsupported file type (.${ext}). Use XML, DOCX, PDF, TXT, or MD.`);
+      return;
+    }
+    if (file.size > 8_000_000) {
+      setError("File exceeds 8 MB limit.");
+      return;
+    }
+
     setUploading(true);
     setError(null);
 
     try {
-      const file = fileInput.files[0];
-      const isBinary = file.type.includes("pdf") || file.type.includes("wordprocessingml") || file.name.endsWith(".docx") || file.name.endsWith(".pdf");
-      
-      let content: string;
-      let encoding: "utf8" | "base64" = "utf8";
-      
-      if (isBinary) {
-        const buffer = await file.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-        let binary = "";
-        const chunk = 0x8000;
-        for (let i = 0; i < bytes.length; i += chunk) {
-          binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-        }
-        content = btoa(binary);
-        encoding = "base64";
-      } else {
-        content = await file.text();
-      }
+      // Use FormData so large files don't hit JSON body limits
+      const form = new FormData();
+      form.append("name", uploadName);
+      if (uploadDescription) form.append("description", uploadDescription);
+      form.append("file", file);
 
       const response = await fetch("/api/guidelines", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: uploadName,
-          description: uploadDescription || undefined,
-          filename: file.name,
-          contentType: file.type,
-          encoding,
-          content,
-        }),
+        body: form,
+        // No Content-Type header — browser sets multipart boundary automatically
       });
 
-      const data = (await response.json()) as { ok: boolean; guideline: StoredGuideline; error?: string };
-      
+      // Guard against non-JSON responses (e.g. Next.js error pages)
+      const text = await response.text();
+      let data: { ok: boolean; guideline?: StoredGuideline; error?: string };
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(
+          response.ok
+            ? "Server returned an unexpected response. Check server logs."
+            : `Server error (${response.status}). The file may be too large or in an unsupported format.`
+        );
+      }
+
       if (!data.ok) {
         throw new Error(data.error || "Upload failed");
       }
@@ -106,9 +108,11 @@ export function GuidelinesManager({
       setUploadName("");
       setUploadDescription("");
       fileInput.value = "";
-      
+
       // Auto-select the newly uploaded guideline
-      onSelectionChange([...selectedIds, data.guideline.id]);
+      if (data.guideline) {
+        onSelectionChange([...selectedIds, data.guideline.id]);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
@@ -169,6 +173,7 @@ export function GuidelinesManager({
               accept=".xml,.docx,.pdf,.txt,.md,.markdown,text/xml,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
               className="w-full text-xs text-ink/60"
             />
+            <p className="text-[10px] text-ink/40">XML · DOCX · PDF · TXT · MD — up to 8 MB</p>
             {error && <p className="text-xs text-rose-600">{error}</p>}
             <button
               type="button"
@@ -176,7 +181,7 @@ export function GuidelinesManager({
               disabled={uploading}
               className="w-full rounded-lg bg-pine px-3 py-2 text-xs font-bold text-paper hover:bg-pine-soft disabled:opacity-50"
             >
-              {uploading ? "Storing..." : "Store Guideline"}
+              {uploading ? "Extracting & storing..." : "Store Guideline"}
             </button>
           </div>
         )}

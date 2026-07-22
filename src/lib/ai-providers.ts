@@ -1,14 +1,22 @@
 /**
  * Multi-provider AI abstraction for ServiceNow analysis.
  * Supports: OpenAI, Anthropic Claude, Azure OpenAI, Ollama (local), and generic OpenAI-compatible endpoints.
+ *
+ * Local providers (ollama, generic) work only when the app is run on your own machine
+ * (e.g., `npm run dev` or `npm start`). They are unavailable on Vercel/Supabase deployments
+ * because serverless functions cannot reach `localhost` on your laptop.
  */
 
 export type AiProviderKey = "openai" | "anthropic" | "azure-openai" | "ollama" | "generic";
 
+export type AiProviderTier = "cloud" | "local";
+
 export type AiProviderConfig = {
   key: AiProviderKey;
+  tier: AiProviderTier;
   name: string;
   description: string;
+  localOnly?: boolean;
   enabled: boolean;
   apiKey?: string;
   endpoint?: string;
@@ -16,7 +24,7 @@ export type AiProviderConfig = {
   maxTokens?: number;
   temperature?: number;
   // Provider-specific settings
-  orgId?: string; // Anthropic
+  orgId?: string; // OpenAI
   deploymentName?: string; // Azure
   apiVersion?: string; // Azure
 };
@@ -26,7 +34,6 @@ export type AnalysisRequest = {
   userPrompt: string;
   temperature?: number;
   maxTokens?: number;
-  // Context for cost/usage tracking
   documentCount: number;
   estimatedTokens: number;
 };
@@ -55,24 +62,27 @@ export type ProviderHealth = {
 // Default configurations for each provider
 export const PROVIDER_DEFAULTS: Record<AiProviderKey, Partial<AiProviderConfig>> = {
   openai: {
+    tier: "cloud",
     name: "OpenAI",
-    description: "GPT-4, GPT-4o, GPT-3.5 via OpenAI API",
+    description: "GPT-4o, GPT-4o-mini, GPT-4 Turbo via OpenAI API",
     endpoint: "https://api.openai.com/v1/chat/completions",
     model: "gpt-4o",
     maxTokens: 4000,
     temperature: 0.2,
   },
   anthropic: {
+    tier: "cloud",
     name: "Anthropic Claude",
-    description: "Claude 3.5 Sonnet, Claude 3 Opus via Anthropic API",
+    description: "Claude 4 Sonnet, Claude 3.5 Sonnet, Claude 3 Opus via Anthropic API",
     endpoint: "https://api.anthropic.com/v1/messages",
-    model: "claude-3-5-sonnet-20241022",
+    model: "claude-sonnet-4-20250514",
     maxTokens: 4000,
     temperature: 0.2,
   },
   "azure-openai": {
-    name: "Azure OpenAI",
-    description: "Microsoft Azure OpenAI Service - GPT-4, GPT-4o",
+    tier: "cloud",
+    name: "Azure OpenAI (M365 Copilot)",
+    description: "Microsoft Azure OpenAI Service — GPT-4o, GPT-4 via your M365 Copilot backend",
     endpoint: "https://{your-resource}.openai.azure.com/openai/deployments/{deployment}/chat/completions",
     model: "gpt-4o",
     apiVersion: "2024-08-01-preview",
@@ -80,16 +90,20 @@ export const PROVIDER_DEFAULTS: Record<AiProviderKey, Partial<AiProviderConfig>>
     temperature: 0.2,
   },
   ollama: {
+    tier: "local",
     name: "Ollama (Local)",
-    description: "Local models via Ollama - Llama 3, Mistral, Mixtral",
+    description: "Local models via Ollama — Llama 3, Mistral, Mixtral",
+    localOnly: true,
     endpoint: "http://localhost:11434/api/generate",
     model: "llama3.2",
     maxTokens: 4000,
     temperature: 0.2,
   },
   generic: {
+    tier: "local",
     name: "Generic OpenAI-Compatible",
-    description: "Any OpenAI-compatible endpoint - Groq, Together, local inference servers",
+    description: "Any OpenAI-compatible endpoint — Groq, Together, local inference servers",
+    localOnly: true,
     endpoint: "http://localhost:8000/v1/chat/completions",
     model: "default",
     maxTokens: 4000,
@@ -103,11 +117,13 @@ export const PROVIDER_COSTS: Record<string, { input: number; output: number }> =
   "openai:gpt-4o-mini": { input: 0.00015, output: 0.0006 },
   "openai:gpt-4": { input: 0.03, output: 0.06 },
   "openai:gpt-4-turbo": { input: 0.01, output: 0.03 },
+  "anthropic:claude-sonnet-4-20250514": { input: 0.003, output: 0.015 },
   "anthropic:claude-3-5-sonnet-20241022": { input: 0.003, output: 0.015 },
   "anthropic:claude-3-opus-20240229": { input: 0.015, output: 0.075 },
   "anthropic:claude-3-haiku-20240307": { input: 0.00025, output: 0.00125 },
-  "azure-openai:gpt-4o": { input: 0.005, output: 0.015 }, // Azure pricing varies
-  "ollama:default": { input: 0, output: 0 }, // Free (local)
+  "azure-openai:gpt-4o": { input: 0.005, output: 0.015 },
+  "ollama:default": { input: 0, output: 0 },
+  "generic:default": { input: 0.01, output: 0.02 },
 };
 
 export function estimateCost(provider: AiProviderKey, model: string, inputTokens: number, outputTokens: number): number {
@@ -117,12 +133,12 @@ export function estimateCost(provider: AiProviderKey, model: string, inputTokens
 }
 
 export function getProviderDisplayName(config: AiProviderConfig): string {
-  return config.name || PROVIDER_DEFAULTS[config.key].name || config.key;
+  return config.name || PROVIDER_DEFAULTS[config.key]?.name || config.key;
 }
 
 export function validateProviderConfig(config: AiProviderConfig): string[] {
   const errors: string[] = [];
-  
+
   switch (config.key) {
     case "openai":
       if (!config.apiKey) errors.push("OpenAI API key required");
@@ -133,24 +149,16 @@ export function validateProviderConfig(config: AiProviderConfig): string[] {
     case "azure-openai":
       if (!config.apiKey) errors.push("Azure API key required");
       if (!config.endpoint || config.endpoint.includes("{your-resource}")) {
-        errors.push("Azure endpoint required (replace {your-resource} and {deployment})");
+        errors.push("Azure endpoint required — replace {your-resource} and {deployment} with your actual values");
       }
       break;
     case "ollama":
-      // Ollama doesn't require API key for local
       if (!config.endpoint) errors.push("Ollama endpoint required (default: http://localhost:11434)");
       break;
     case "generic":
       if (!config.endpoint) errors.push("Endpoint URL required");
       break;
   }
-  
-  return errors;
-}
 
-// Helper to check if a provider is likely M365 Copilot
-export function isMicrosoftCopilotProvider(config: AiProviderConfig): boolean {
-  return config.key === "azure-openai" || 
-    (config.endpoint?.includes("microsoft") || config.endpoint?.includes("azure")) ||
-    config.model.toLowerCase().includes("copilot");
+  return errors;
 }

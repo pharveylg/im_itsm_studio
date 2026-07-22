@@ -11,6 +11,8 @@ import {
 
 type ProviderState = {
   key: AiProviderKey;
+  tier: "cloud" | "local";
+  localOnly?: boolean;
   name: string;
   enabled: boolean;
   isDefault: boolean;
@@ -35,6 +37,9 @@ const PROVIDER_ORDER: AiProviderKey[] = [
   "generic",
 ];
 
+const LOCAL_PROVIDER_NOTE =
+  "Local providers only work when running this app on your own machine (e.g., `npm run dev` or `npm start`). They are unavailable on Vercel/Supabase deployments because serverless functions cannot reach localhost on your laptop.";
+
 export function AiProviderConsole() {
   const [providers, setProviders] = useState<ProviderState[]>([]);
   const [health, setHealth] = useState<Partial<Record<AiProviderKey, HealthStatus>>>({});
@@ -45,21 +50,23 @@ export function AiProviderConsole() {
     saving: false,
   });
 
-  // Form state for configuration
   const [formConfig, setFormConfig] = useState<Partial<AiProviderConfig>>({});
   const [showSecret, setShowSecret] = useState(false);
 
-  const fetchProviders = useCallback(async () => {
+  const fetchProviders = useCallback(async (withHealth = false) => {
     try {
-      const response = await fetch("/api/ai-providers?health=true");
+      const url = withHealth ? "/api/ai-providers?health=true" : "/api/ai-providers";
+      const response = await fetch(url);
       const data = (await response.json()) as {
         providers: ProviderState[];
-        health: HealthStatus[];
+        health?: HealthStatus[];
       };
       setProviders(data.providers);
-      setHealth(
-        data.health.reduce((acc, h) => ({ ...acc, [h.key]: h }), {} as Record<AiProviderKey, HealthStatus>)
-      );
+      if (data.health) {
+        setHealth(
+          data.health.reduce((acc, h) => ({ ...acc, [h.key]: h }), {} as Record<AiProviderKey, HealthStatus>),
+        );
+      }
     } catch {
       // ignore
     } finally {
@@ -68,7 +75,7 @@ export function AiProviderConsole() {
   }, []);
 
   useEffect(() => {
-    fetchProviders();
+    fetchProviders(false);
   }, [fetchProviders]);
 
   const openConfig = (key: AiProviderKey) => {
@@ -78,10 +85,12 @@ export function AiProviderConsole() {
       ...defaults,
       key,
       enabled: existing?.enabled ?? false,
+      model: existing?.model ?? defaults.model ?? "",
     });
     setSelectedProvider(key);
     setActiveTab("configure");
     setShowSecret(false);
+    setSaveState({ saving: false });
   };
 
   const saveConfig = async () => {
@@ -130,11 +139,99 @@ export function AiProviderConsole() {
 
   const sortedProviders = useMemo(() => {
     return [...providers].sort(
-      (a, b) => PROVIDER_ORDER.indexOf(a.key) - PROVIDER_ORDER.indexOf(b.key)
+      (a, b) => PROVIDER_ORDER.indexOf(a.key) - PROVIDER_ORDER.indexOf(b.key),
     );
   }, [providers]);
 
   const enabledCount = providers.filter((p) => p.enabled).length;
+
+  const renderProviderCard = (provider: ProviderState) => {
+    const h = health[provider.key];
+    const isHealthy = h?.status === "healthy";
+    return (
+      <div
+        key={provider.key}
+        className={`group relative rounded-2xl border bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md ${
+          provider.enabled ? "border-leaf/60" : "border-line"
+        }`}
+      >
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <span
+              className={`flex size-10 items-center justify-center rounded-xl text-sm font-bold ${
+                provider.enabled ? "bg-leaf-soft text-leaf-deep" : "bg-mist text-ink/50"
+              }`}
+            >
+              {provider.key.slice(0, 2).toUpperCase()}
+            </span>
+            <div>
+              <p className="font-display text-sm font-bold text-ink">{provider.name}</p>
+              <p className="font-mono text-[10px] text-ink/45">{provider.model}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {provider.isDefault && (
+              <span className="rounded-full bg-amber-50 px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-amber-700">
+                Default
+              </span>
+            )}
+            <span
+              className={`size-2 rounded-full ${
+                provider.enabled ? (isHealthy ? "bg-leaf dot-live" : "bg-ember") : "bg-ink/15"
+              }`}
+            />
+          </div>
+        </div>
+
+        <p className="mt-3 text-xs leading-5 text-ink/60">
+          {PROVIDER_DEFAULTS[provider.key].description}
+        </p>
+
+        {provider.enabled && h && (
+          <div className="mt-3 space-y-1">
+            <div className="flex items-center gap-2">
+              <span
+                className={`rounded-full px-2 py-0.5 font-mono text-[9px] font-bold uppercase ${
+                  h.status === "healthy"
+                    ? "bg-leaf-soft text-leaf-deep"
+                    : h.status === "degraded"
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-rose-50 text-rose-600"
+                }`}
+              >
+                {h.status}
+              </span>
+              <span className="font-mono text-[9px] text-ink/35">{h.latencyMs}ms</span>
+            </div>
+            {h.error && (
+              <p className="rounded-lg bg-rose-50 px-2 py-1.5 font-mono text-[10px] leading-4 text-rose-600">
+                {h.error}
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => openConfig(provider.key)}
+            className="flex-1 rounded-lg border border-line bg-white px-3 py-2 font-mono text-[11px] font-bold text-ink transition-colors hover:bg-mist"
+          >
+            {provider.hasKey ? "Edit" : "Configure"}
+          </button>
+          {provider.hasKey && (
+            <button
+              type="button"
+              onClick={() => deleteConfig(provider.key)}
+              className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 font-mono text-[11px] font-bold text-rose-600 transition-colors hover:bg-rose-100"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -142,21 +239,38 @@ export function AiProviderConsole() {
         <div>
           <p className="mt-3 max-w-2xl text-[15px] leading-7 text-ink/70">
             Configure multiple AI providers and switch between them per analysis. Mix cloud and local
-            options—use Anthropic, Azure OpenAI (Copilot backend), local Ollama, or any
+            options — use Anthropic, Azure OpenAI (Copilot backend), local Ollama, or any
             OpenAI-compatible endpoint.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 rounded-2xl border border-line bg-white px-5 py-4 shadow-sm">
-          <div className="text-right">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink/45">
-              Active providers
-            </p>
-            <p className={`mt-1 font-display text-lg font-bold ${enabledCount > 0 ? "text-leaf-deep" : "text-amber-600"}`}>
-              {enabledCount} configured
-            </p>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => fetchProviders(true)}
+            className="rounded-xl border border-line bg-white px-4 py-3 font-mono text-[11px] font-bold text-ink/70 transition hover:bg-mist"
+          >
+            Test All Providers
+          </button>
+          <div className="flex items-center gap-3 rounded-2xl border border-line bg-white px-5 py-4 shadow-sm">
+            <div className="text-right">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink/45">
+                Active providers
+              </p>
+              <p
+                className={`mt-1 font-display text-lg font-bold ${
+                  enabledCount > 0 ? "text-leaf-deep" : "text-amber-600"
+                }`}
+              >
+                {enabledCount} configured
+              </p>
+            </div>
+            <span
+              className={`size-3 rounded-full ${
+                enabledCount > 0 ? "bg-leaf dot-live" : "bg-ember"
+              }`}
+            />
           </div>
-          <span className={`size-3 rounded-full ${enabledCount > 0 ? "bg-leaf dot-live" : "bg-ember"}`} />
         </div>
       </div>
 
@@ -184,98 +298,49 @@ export function AiProviderConsole() {
       </div>
 
       {activeTab === "list" && (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="space-y-8">
           {loading ? (
-            <div className="col-span-full rounded-2xl border border-line bg-white p-8 text-center">
+            <div className="rounded-2xl border border-line bg-white p-8 text-center">
               <span className="font-mono text-sm text-ink/50">Loading providers…</span>
             </div>
           ) : (
-            sortedProviders.map((provider) => {
-              const h = health[provider.key];
-              const isHealthy = h?.status === "healthy";
-              return (
-                <div
-                  key={provider.key}
-                  className={`group relative rounded-2xl border bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md ${
-                    provider.enabled ? "border-leaf/60" : "border-line"
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`flex size-10 items-center justify-center rounded-xl text-sm font-bold ${
-                          provider.enabled ? "bg-leaf-soft text-leaf-deep" : "bg-mist text-ink/50"
-                        }`}
-                      >
-                        {provider.key.slice(0, 2).toUpperCase()}
-                      </span>
-                      <div>
-                        <p className="font-display text-sm font-bold text-ink">
-                          {provider.name}
-                        </p>
-                        <p className="font-mono text-[10px] text-ink/45">
-                          {provider.model}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {provider.isDefault && (
-                        <span className="rounded-full bg-amber-50 px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-amber-700">
-                          Default
-                        </span>
-                      )}
-                      <span
-                        className={`size-2 rounded-full ${
-                          provider.enabled ? (isHealthy ? "bg-leaf dot-live" : "bg-ember") : "bg-ink/15"
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  <p className="mt-3 text-xs leading-5 text-ink/60">
-                    {PROVIDER_DEFAULTS[provider.key].description}
-                  </p>
-
-                  {provider.enabled && h && (
-                    <div className="mt-3 flex items-center gap-2">
-                      <span
-                        className={`rounded-full px-2 py-0.5 font-mono text-[9px] font-bold uppercase ${
-                          h.status === "healthy"
-                            ? "bg-leaf-soft text-leaf-deep"
-                            : h.status === "degraded"
-                            ? "bg-amber-50 text-amber-700"
-                            : "bg-rose-50 text-rose-600"
-                        }`}
-                      >
-                        {h.status}
-                      </span>
-                      <span className="font-mono text-[9px] text-ink/35">
-                        {h.latencyMs}ms
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="mt-4 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => openConfig(provider.key)}
-                      className="flex-1 rounded-lg border border-line bg-white px-3 py-2 font-mono text-[11px] font-bold text-ink transition-colors hover:bg-mist"
-                    >
-                      {provider.hasKey ? "Edit" : "Configure"}
-                    </button>
-                    {provider.hasKey && (
-                      <button
-                        type="button"
-                        onClick={() => deleteConfig(provider.key)}
-                        className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 font-mono text-[11px] font-bold text-rose-600 transition-colors hover:bg-rose-100"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
+            <>
+              {/* Cloud providers section */}
+              <div>
+                <div className="mb-3 flex items-center gap-3">
+                  <h3 className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-ink/55">
+                    Cloud Providers
+                  </h3>
+                  <span className="h-px flex-1 bg-line" />
                 </div>
-              );
-            })
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {sortedProviders
+                    .filter((p) => p.tier === "cloud")
+                    .map((provider) => renderProviderCard(provider))}
+                </div>
+              </div>
+
+              {/* Local providers section */}
+              <div>
+                <div className="mb-3 flex items-center gap-3">
+                  <h3 className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-ink/55">
+                    Local Providers
+                  </h3>
+                  <span className="h-px flex-1 bg-line" />
+                  <span className="rounded-full bg-amber-50 px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide text-amber-700">
+                    Runs on your machine
+                  </span>
+                </div>
+                <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-3 text-[11px] leading-5 text-amber-800">
+                  {LOCAL_PROVIDER_NOTE}
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {sortedProviders
+                    .filter((p) => p.tier === "local")
+                    .map((provider) => renderProviderCard(provider))}
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -293,6 +358,11 @@ export function AiProviderConsole() {
             <h3 className="font-display text-xl font-bold text-ink">
               Configure {PROVIDER_DEFAULTS[selectedProvider].name}
             </h3>
+            {PROVIDER_DEFAULTS[selectedProvider].tier === "local" && (
+              <span className="rounded-full bg-amber-50 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                Local Only
+              </span>
+            )}
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
@@ -328,9 +398,7 @@ export function AiProviderConsole() {
               </label>
               <input
                 value={formConfig.model || ""}
-                onChange={(e) =>
-                  setFormConfig((c) => ({ ...c, model: e.target.value }))
-                }
+                onChange={(e) => setFormConfig((c) => ({ ...c, model: e.target.value }))}
                 placeholder={PROVIDER_DEFAULTS[selectedProvider].model}
                 className={`${inputCls} mt-2 font-mono text-[13px]`}
               />
@@ -349,9 +417,7 @@ export function AiProviderConsole() {
                 <div className="relative mt-2">
                   <input
                     value={formConfig.apiKey || ""}
-                    onChange={(e) =>
-                      setFormConfig((c) => ({ ...c, apiKey: e.target.value }))
-                    }
+                    onChange={(e) => setFormConfig((c) => ({ ...c, apiKey: e.target.value }))}
                     type={showSecret ? "text" : "password"}
                     placeholder="sk-... or ant-..."
                     className={`${inputCls} pr-20 font-mono text-[13px]`}
@@ -365,45 +431,75 @@ export function AiProviderConsole() {
                   </button>
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-ink/40">
-                  Stored encrypted server-side. Never sent to browser.
+                  Stored server-side only. Re-enter the key if you need to update it — the saved value is never returned to the browser for security.
                 </p>
               </div>
             )}
 
-            {(selectedProvider === "azure-openai" ||
-              selectedProvider === "ollama" ||
-              selectedProvider === "generic") && (
+            {selectedProvider === "azure-openai" && (
+              <>
+                <div className="md:col-span-2">
+                  <label className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/55">
+                    Endpoint URL
+                  </label>
+                  <input
+                    value={formConfig.endpoint || ""}
+                    onChange={(e) => setFormConfig((c) => ({ ...c, endpoint: e.target.value }))}
+                    placeholder={PROVIDER_DEFAULTS[selectedProvider].endpoint}
+                    className={`${inputCls} mt-2 font-mono text-[13px]`}
+                  />
+                  <p className="mt-1 font-mono text-[10px] text-ink/40">
+                    Format: https://resource.openai.azure.com/openai/deployments/DEPLOYMENT/chat/completions
+                  </p>
+                </div>
+                <div>
+                  <label className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/55">
+                    API Version
+                  </label>
+                  <input
+                    value={formConfig.apiVersion || ""}
+                    onChange={(e) => setFormConfig((c) => ({ ...c, apiVersion: e.target.value }))}
+                    placeholder="2024-08-01-preview"
+                    className={`${inputCls} mt-2 font-mono text-[13px]`}
+                  />
+                </div>
+              </>
+            )}
+
+            {(selectedProvider === "ollama" || selectedProvider === "generic") && (
               <div className="md:col-span-2">
                 <label className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/55">
                   Endpoint URL
                 </label>
                 <input
                   value={formConfig.endpoint || ""}
-                  onChange={(e) =>
-                    setFormConfig((c) => ({ ...c, endpoint: e.target.value }))
-                  }
+                  onChange={(e) => setFormConfig((c) => ({ ...c, endpoint: e.target.value }))}
                   placeholder={PROVIDER_DEFAULTS[selectedProvider].endpoint}
                   className={`${inputCls} mt-2 font-mono text-[13px]`}
                 />
-                {selectedProvider === "azure-openai" && (
+                {selectedProvider === "ollama" && (
                   <p className="mt-1 font-mono text-[10px] text-ink/40">
-                    Format: https://resource.openai.azure.com/openai/deployments/DEPLOYMENT/chat/completions
+                    Install Ollama from ollama.com, run `ollama pull llama3.2`, and leave the default endpoint.
+                  </p>
+                )}
+                {selectedProvider === "generic" && (
+                  <p className="mt-1 font-mono text-[10px] text-ink/40">
+                    Works with Groq, Together, LM Studio, vLLM, or any OpenAI-compatible endpoint.
                   </p>
                 )}
               </div>
             )}
 
-            {selectedProvider === "azure-openai" && (
-              <div>
+            {selectedProvider === "generic" && (
+              <div className="md:col-span-2">
                 <label className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/55">
-                  API Version
+                  API Key (optional)
                 </label>
                 <input
-                  value={formConfig.apiVersion || ""}
-                  onChange={(e) =>
-                    setFormConfig((c) => ({ ...c, apiVersion: e.target.value }))
-                  }
-                  placeholder="2024-08-01-preview"
+                  value={formConfig.apiKey || ""}
+                  onChange={(e) => setFormConfig((c) => ({ ...c, apiKey: e.target.value }))}
+                  type={showSecret ? "text" : "password"}
+                  placeholder="Bearer token if required"
                   className={`${inputCls} mt-2 font-mono text-[13px]`}
                 />
               </div>

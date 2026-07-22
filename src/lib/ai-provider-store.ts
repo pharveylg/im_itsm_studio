@@ -125,6 +125,8 @@ export async function deleteProviderConfig(key: AiProviderKey): Promise<void> {
 export async function getPublicProviderState(): Promise<
   Array<{
     key: AiProviderKey;
+    tier: "cloud" | "local";
+    localOnly?: boolean;
     name: string;
     enabled: boolean;
     isDefault: boolean;
@@ -133,20 +135,22 @@ export async function getPublicProviderState(): Promise<
   }>
 > {
   const configs = await getAllProviderConfigs();
-  
+
   // Also include defaults for providers not yet configured
   const allKeys = Object.keys(PROVIDER_DEFAULTS) as AiProviderKey[];
   const configuredKeys = new Set(configs.map((c) => c.key));
-  
+
   const allConfigs = [
     ...configs,
     ...allKeys
       .filter((k) => !configuredKeys.has(k))
       .map((k) => ({ ...PROVIDER_DEFAULTS[k], key: k, enabled: false } as AiProviderConfig)),
   ];
-  
+
   return allConfigs.map((c) => ({
     key: c.key,
+    tier: c.tier ?? "cloud",
+    localOnly: c.localOnly,
     name: c.name,
     enabled: c.enabled,
     isDefault: false, // computed separately

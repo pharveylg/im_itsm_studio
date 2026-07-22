@@ -1,0 +1,297 @@
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'drizzle.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'eslint.config.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'next.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'postcss.config.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/ai-providers/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/analyze/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/connection/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/guidelines/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/health/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/knowledge/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/globals.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/knowledge/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/settings/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/xml-analysis-workbench.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/ai-provider-console.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/collapsible-section.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/connection-console.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/guidelines-manager.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/knowledge-author-console.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/top-nav.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/db/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/db/schema.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/ai-adapters.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/ai-provider-store.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/ai-providers.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/connection-shared.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/connection.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/document-extract.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/guidelines-store.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/itsm-modules.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/knowledge-authoring.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/mi-comms-analysis.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/xml-analysis.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tsconfig.json', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/src/app/api/analyze/route.ts b/src/app/api/analyze/route.ts[m
+[1mindex 22ceef4..aaacd88 100644[m
+[1m--- a/src/app/api/analyze/route.ts[m
+[1m+++ b/src/app/api/analyze/route.ts[m
+[36m@@ -9,6 +9,7 @@[m [mimport {[m
+   buildAnalysisContext,[m
+   type XmlDocumentInput,[m
+ } from "@/lib/xml-analysis";[m
+[32m+[m[32mimport type { ItsmModuleKey } from "@/lib/itsm-modules";[m
+ import { callProvider, estimateCost } from "@/lib/ai-adapters";[m
+ import {[m
+   getDefaultProvider,[m
+[36m@@ -34,6 +35,7 @@[m [mtype AnalyzeRequest = {[m
+   guidelineIds?: string[];[m
+   emailDocuments?: EmailDocumentInput[];[m
+   analysisMode?: AnalysisMode;[m
+[32m+[m[32m  scopedModules?: ItsmModuleKey[];[m
+   focus?: string;[m
+   includeRaw?: boolean;[m
+   provider?: AiProviderKey;[m
+[36m@@ -137,6 +139,9 @@[m [mexport async function POST(request: Request) {[m
+       providerConfig = { ...providerConfig, model: body.model.trim() };[m
+     }[m
+ [m
+[32m+[m[32m    // Resolve scoped modules (empty = all modules)[m
+[32m+[m[32m    const scopedModules = body.scopedModules?.length ? body.scopedModules : undefined;[m
+[32m+[m
+     // Prepare the analysis request. MI Comms uses a governance-specific report contract.[m
+     const analysisRequest = analysisMode === "mi_comms" && communications[m
+       ? {[m
+[36m@@ -155,12 +160,13 @@[m [mexport async function POST(request: Request) {[m
+           ),[m
+         }[m
+       : {[m
+[31m-          systemPrompt: analysisSystemPrompt(),[m
+[32m+[m[32m          systemPrompt: analysisSystemPrompt(scopedModules),[m
+           userPrompt: analysisUserPrompt([m
+             guidelineBundle.text,[m
+             body.focus ?? "",[m
+             context,[m
+             Boolean(body.includeRaw),[m
+[32m+[m[32m            scopedModules,[m
+           ),[m
+           temperature: providerConfig.temperature,[m
+           maxTokens: providerConfig.maxTokens,[m
+[36m@@ -182,6 +188,7 @@[m [mexport async function POST(request: Request) {[m
+       model: result.model,[m
+       analysis: result.text,[m
+       analysisMode,[m
+[32m+[m[32m      scopedModules: scopedModules ?? null,[m
+       context: publicContext,[m
+       communications: communications[m
+         ? {[m
+[1mdiff --git a/src/app/api/guidelines/route.ts b/src/app/api/guidelines/route.ts[m
+[1mindex 5244948..547110d 100644[m
+[1m--- a/src/app/api/guidelines/route.ts[m
+[1m+++ b/src/app/api/guidelines/route.ts[m
+[36m@@ -1,6 +1,7 @@[m
+ /**[m
+  * Guidelines management API.[m
+  * Supports listing, creating, updating, and deleting stored guidelines.[m
+[32m+[m[32m * POST uses FormData (multipart) to handle large files without JSON body limits.[m
+  */[m
+ [m
+ import { NextResponse } from "next/server";[m
+[36m@@ -29,19 +30,71 @@[m [mexport async function GET() {[m
+   }[m
+ }[m
+ [m
+[31m-/** POST: Store a new guideline from uploaded file. */[m
+[32m+[m[32m/** POST: Store a new guideline. Accepts both FormData (multipart) and JSON. */[m
+ export async function POST(request: Request) {[m
+   try {[m
+[31m-    const body = (await request.json()) as {[m
+[31m-      name: string;[m
+[31m-      description?: string;[m
+[31m-      filename: string;[m
+[31m-      contentType?: string;[m
+[31m-      encoding?: "utf8" | "base64";[m
+[31m-      content: string;[m
+[31m-    };[m
+[32m+[m[32m    const contentType = request.headers.get("content-type") ?? "";[m
+[32m+[m
+[32m+[m[32m    let name: string;[m
+[32m+[m[32m    let description: string | undefined;[m
+[32m+[m[32m    let filename: string;[m
+[32m+[m[32m    let fileContentType: string;[m
+[32m+[m[32m    let encoding: "utf8" | "base64";[m
+[32m+[m[32m    let content: string;[m
+[32m+[m
+[32m+[m[32m    if (contentType.includes("multipart/form-data")) {[m
+[32m+[m[32m      // ── FormData upload (preferred for large files) ──[m
+[32m+[m[32m      const form = await request.formData();[m
+[32m+[m[32m      name = String(form.get("name") ?? "").trim();[m
+[32m+[m[32m      description = (form.get("description") as string | null)?.trim() || undefined;[m
+[32m+[m[32m      const file = form.get("file") as File | null;[m
+[32m+[m
+[32m+[m[32m      if (!name) {[m
+[32m+[m[32m        return NextResponse.json({ ok: false, error: "Give this guideline a name." }, { status: 400 });[m
+[32m+[m[32m      }[m
+[32m+[m[32m      if (!file || file.size === 0) {[m
+[32m+[m[32m        return NextResponse.json({ ok: false, error: "Select a file to upload." }, { status: 400 });[m
+[32m+[m[32m      }[m
+[32m+[m[32m      if (file.size > 8_000_000) {[m
+[32m+[m[32m        return NextResponse.json({ ok: false, error: "File exceeds 8 MB limit." }, { status: 400 });[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      filename = file.name;[m
+[32m+[m[32m      fileContentType = file.type || "application/octet-stream";[m
+[32m+[m
+[32m+[m[32m      // Detect binary vs text[m
+[32m+[m[32m      const ext = filename.toLowerCase().split(".").pop() ?? "";[m
+[32m+[m[32m      const isBinary = ext === "pdf" || ext === "docx" || ext === "doc"[m
+[32m+[m[32m        || fileContentType.includes("pdf")[m
+[32m+[m[32m        || fileContentType.includes("wordprocessingml");[m
+[32m+[m
+[32m+[m[32m      if (isBinary) {[m
+[32m+[m[32m        const buffer = await file.arrayBuffer();[m
+[32m+[m[32m        content = Buffer.from(buffer).toString("base64");[m
+[32m+[m[32m        encoding = "base64";[m
+[32m+[m[32m      } else {[m
+[32m+[m[32m        content = await file.text();[m
+[32m+[m[32m        encoding = "utf8";[m
+[32m+[m[32m      }[m
+[32m+[m[32m    } else {[m
+[32m+[m[32m      // ── JSON fallback ──[m
+[32m+[m[32m      const body = (await request.json()) as {[m
+[32m+[m[32m        name: string;[m
+[32m+[m[32m        description?: string;[m
+[32m+[m[32m        filename: string;[m
+[32m+[m[32m        contentType?: string;[m
+[32m+[m[32m        encoding?: "utf8" | "base64";[m
+[32m+[m[32m        content: string;[m
+[32m+[m[32m      };[m
+[32m+[m[32m      name = body.name?.trim() ?? "";[m
+[32m+[m[32m      description = body.description;[m
+[32m+[m[32m      filename = body.filename;[m
+[32m+[m[32m      fileContentType = body.contentType ?? "application/octet-stream";[m
+[32m+[m[32m      encoding = body.encoding ?? "utf8";[m
+[32m+[m[32m      content = body.content;[m
+[32m+[m[32m    }[m
+ [m
+[31m-    if (!body.name || !body.filename || !body.content) {[m
+[32m+[m[32m    if (!name || !filename || !content) {[m
+       return NextResponse.json([m
+         { ok: false, error: "Name, filename, and content are required." },[m
+         { status: 400 }[m
+[36m@@ -50,17 +103,17 @@[m [mexport async function POST(request: Request) {[m
+ [m
+     // Extract text from the document[m
+     const extracted = await extractGuidelineDocument({[m
+[31m-      name: body.filename,[m
+[31m-      contentType: body.contentType,[m
+[31m-      content: body.content,[m
+[31m-      encoding: body.encoding,[m
+[32m+[m[32m      name: filename,[m
+[32m+[m[32m      contentType: fileContentType,[m
+[32m+[m[32m      content,[m
+[32m+[m[32m      encoding,[m
+     });[m
+ [m
+     const guideline = await storeGuideline({[m
+[31m-      name: body.name,[m
+[31m-      description: body.description,[m
+[31m-      originalFilename: body.filename,[m
+[31m-      contentType: body.contentType ?? "application/octet-stream",[m
+[32m+[m[32m      name,[m
+[32m+[m[32m      description,[m
+[32m+[m[32m      originalFilename: filename,[m
+[32m+[m[32m      contentType: fileContentType,[m
+       extractedText: extracted.text,[m
+       fileSizeBytes: extracted.summary.bytes,[m
+     });[m
+[1mdiff --git a/src/app/xml-analysis-workbench.tsx b/src/app/xml-analysis-workbench.tsx[m
+[1mindex beb63f6..41605ea 100644[m
+[1m--- a/src/app/xml-analysis-workbench.tsx[m
+[1m+++ b/src/app/xml-analysis-workbench.tsx[m
+[36m@@ -2,6 +2,9 @@[m
+ [m
+ import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from "react";[m
+ import { GuidelinesManager } from "@/components/guidelines-manager";[m
+[32m+[m[32mimport { ReportRenderer } from "@/components/report-renderer";[m
+[32m+[m[32mimport { ITSM_MODULES, CORE_ITSM_MODULE_KEYS, type ItsmModuleKey } from "@/lib/itsm-modules";[m
+[32m+[m[32mimport { ITSM_ANALYSIS_TABS, MI_COMMS_TABS } from "@/lib/report-output";[m
+ [m
+ const DEFAULT_GUIDELINES = `Optional freeform notes for this run.[m
+ [m
+[36m@@ -82,6 +85,7 @@[m [mtype AnalyzeResponse = {[m
+   error?: string;[m
+   analysis?: string;[m
+   analysisMode?: AnalysisMode;[m
+[32m+[m[32m  scopedModules?: string[] | null;[m
+   provider?: string;[m
+   model?: string;[m
+   analyzedAt?: string;[m
+[36m@@ -168,40 +172,7 @@[m [mfunction kindBadge(kind: string) {[m
+   }[m
+ }[m
+ [m
+[31m-function MarkdownOutput({ markdown }: { markdown: string }) {[m
+[31m-  const blocks = markdown.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);[m
+[31m-[m
+[31m-  return ([m
+[31m-    <div className="space-y-5 text-[15px] leading-7 text-slate-700">[m
+[31m-      {blocks.map((block, index) => {[m
+[31m-        const lines = block.split("\n").map((line) => line.trimEnd());[m
+[31m-        const first = lines[0] ?? "";[m
+[31m-        if (/^#{1,3}\s/.test(first)) {[m
+[31m-          return <h3 key={index} className="text-xl font-black text-slate-950">{first.replace(/^#{1,3}\s+/, "")}</h3>;[m
+[31m-        }[m
+[31m-[m
+[31m-        if (lines.every((line) => /^[-*]\s+/.test(line) || /^\d+[.)]\s+/.test(line))) {[m
+[31m-          return ([m
+[31m-            <ul key={index} className="space-y-2 pl-5 marker:text-sky-500">[m
+[31m-              {lines.map((line, lineIndex) => <li key={lineIndex}>{line.replace(/^(?:[-*]|\d+[.)])\s+/, "")}</li>)}[m
+[31m-            </ul>[m
+[31m-          );[m
+[31m-        }[m
+[31m-[m
+[31m-        return ([m
+[31m-          <p key={index} className="whitespace-pre-wrap">[m
+[31m-            {lines.map((line, lineIndex) => ([m
+[31m-              <span key={lineIndex}>[m
+[31m-                {line}[m
+[31m-                {lineIndex < lines.length - 1 && <br />}[m
+[31m-              </span>[m
+[31m-            ))}[m
+[31m-          </p>[m
+[31m-        );[m
+[31m-      })}[m
+[31m-    </div>[m
+[31m-  );[m
+[31m-}[m
+[32m+[m[32m/* MarkdownOutput removed — replaced by ReportRenderer with tagged blocks */[m
+ [m
+ function Stat({ label, value, tone = "slate" }: { label: string; value: string | number; tone?: "slate" | "sky" | "emerald" | "amber" }) {[m
+   const tones = {[m
+[36m@@ -239,6 +210,7 @@[m [mexport function XmlAnalysisWorkbench() {[m
+   const [copied, setCopied] = useState(false);[m
+   const [providers, setProviders] = useState<AiProviderOption[]>([]);[m
+   const [selectedGuidelineIds, setSelectedGuidelineIds] = useState<string[]>([]);[m
+[32m+[m[32m  const [scopedModules, setScopedModules] = useState<ItsmModuleKey[]>([]);[m
+   const [selectedProvider, setSelectedProvider] = useState<string>("default");[m
+   const fileInputRef = useRef<HTMLInputElement>(null);[m
+   const emailInputRef = useRef<HTMLInputElement>(null);[m
+[36m@@ -430,6 +402,7 @@[m [mexport function XmlAnalysisWorkbench() {[m
+           analysisMode,[m
+           guidelines,[m
+           guidelineIds: selectedGuidelineIds,[m
+[32m+[m[32m          scopedModules: scopedModules.length > 0 ? scopedModules : undefined,[m
+           focus,[m
+           includeRaw,[m
+           provider: selectedProvider === "default" ? undefined : selectedProvider,[m
+[36m@@ -676,6 +649,66 @@[m [mexport function XmlAnalysisWorkbench() {[m
+                  <span className="text-sm font-bold text-slate-700">Optional freeform notes</span>[m
+                  <textarea value={guidelines} onChange={(event) => setGuidelines(event.target.value)} rows={4} className="mt-2 w-full resize-y rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 outline-none ring-sky-500 focus:ring-4" />[m
+                </label>[m
+[32m+[m
+[32m+[m[32m               {/* 

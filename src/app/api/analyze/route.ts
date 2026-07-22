@@ -9,6 +9,7 @@ import {
   buildAnalysisContext,
   type XmlDocumentInput,
 } from "@/lib/xml-analysis";
+import type { ItsmModuleKey } from "@/lib/itsm-modules";
 import { callProvider, estimateCost } from "@/lib/ai-adapters";
 import {
   getDefaultProvider,
@@ -34,6 +35,7 @@ type AnalyzeRequest = {
   guidelineIds?: string[];
   emailDocuments?: EmailDocumentInput[];
   analysisMode?: AnalysisMode;
+  scopedModules?: ItsmModuleKey[];
   focus?: string;
   includeRaw?: boolean;
   provider?: AiProviderKey;
@@ -137,6 +139,9 @@ export async function POST(request: Request) {
       providerConfig = { ...providerConfig, model: body.model.trim() };
     }
 
+    // Resolve scoped modules (empty = all modules)
+    const scopedModules = body.scopedModules?.length ? body.scopedModules : undefined;
+
     // Prepare the analysis request. MI Comms uses a governance-specific report contract.
     const analysisRequest = analysisMode === "mi_comms" && communications
       ? {
@@ -155,12 +160,13 @@ export async function POST(request: Request) {
           ),
         }
       : {
-          systemPrompt: analysisSystemPrompt(),
+          systemPrompt: analysisSystemPrompt(scopedModules),
           userPrompt: analysisUserPrompt(
             guidelineBundle.text,
             body.focus ?? "",
             context,
             Boolean(body.includeRaw),
+            scopedModules,
           ),
           temperature: providerConfig.temperature,
           maxTokens: providerConfig.maxTokens,
@@ -182,6 +188,7 @@ export async function POST(request: Request) {
       model: result.model,
       analysis: result.text,
       analysisMode,
+      scopedModules: scopedModules ?? null,
       context: publicContext,
       communications: communications
         ? {

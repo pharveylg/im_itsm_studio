@@ -1,6 +1,10 @@
 /**
  * Provider-specific API adapters for AI analysis.
- * Each adapter handles the unique request/response format of its provider.
+ * Supports: OpenAI, Anthropic Claude, Azure OpenAI, Ollama (local), and generic OpenAI-compatible endpoints.
+ *
+ * Local providers (ollama, generic) only work when the app runs on your own machine
+ * (`npm run dev` or `npm start`). On Vercel/Supabase deployments, localhost
+ * endpoints are unreachable.
  */
 
 import {
@@ -13,6 +17,7 @@ import {
 } from "./ai-providers";
 
 const DEFAULT_TIMEOUT = 120_000;
+const HEALTH_TIMEOUT = 12_000;
 
 export function estimateCost(
   provider: AiProviderKey,
@@ -25,7 +30,6 @@ export function estimateCost(
   return (inputTokens / 1000) * costs.input + (outputTokens / 1000) * costs.output;
 }
 
-// Base fetch with timeout
 async function fetchWithTimeout(
   url: string,
   options: RequestInit,
@@ -33,13 +37,18 @@ async function fetchWithTimeout(
 ): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
-  
+
   try {
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
     });
     return response;
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Request timed out after ${Math.round(timeout / 1000)}s`);
+    }
+    throw error;
   } finally {
     clearTimeout(timer);
   }
@@ -52,16 +61,6 @@ async function callOpenAI(
 ): Promise<AnalysisResponse> {
   const startTime = Date.now();
   const endpoint = config.endpoint || PROVIDER_DEFAULTS.openai.endpoint!;
-  
-  const body = {
-    model: config.model,
-    messages: [
-      { role: "system", content: request.systemPrompt },
-      { role: "user", content: request.userPrompt },
-    ],
-    temperature: request.temperature ?? config.temperature ?? 0.2,
-    max_tokens: request.maxTokens ?? config.maxTokens ?? 4000,
-  };
 
   const response = await fetchWithTimeout(endpoint, {
     method: "POST",
@@ -70,12 +69,20 @@ async function callOpenAI(
       Authorization: `Bearer ${config.apiKey}`,
       ...(config.orgId ? { "OpenAI-Organization": config.orgId } : {}),
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      model: config.model,
+      messages: [
+        { role: "system", content: request.systemPrompt },
+        { role: "user", content: request.userPrompt },
+      ],
+      temperature: request.temperature ?? config.temperature ?? 0.2,
+      max_tokens: request.maxTokens ?? config.maxTokens ?? 4000,
+    }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`OpenAI error (${response.status}): ${error.slice(0, 500)}`);
+    throw new Error(`OpenAI ${response.status}: ${error.slice(0, 500)}`);
   }
 
   const data = (await response.json()) as {
@@ -84,10 +91,8 @@ async function callOpenAI(
     model: string;
   };
 
-  const text = data.choices[0]?.message?.content || data.choices[0]?.text || "";
-  
   return {
-    text,
+    text: data.choices[0]?.message?.content || data.choices[0]?.text || "",
     provider: "openai",
     model: data.model || config.model,
     usage: data.usage ? {
@@ -106,14 +111,6 @@ async function callAnthropic(
 ): Promise<AnalysisResponse> {
   const startTime = Date.now();
   const endpoint = config.endpoint || PROVIDER_DEFAULTS.anthropic.endpoint!;
-  
-  const body = {
-    model: config.model,
-    max_tokens: request.maxTokens ?? config.maxTokens ?? 4000,
-    temperature: request.temperature ?? config.temperature ?? 0.2,
-    system: request.systemPrompt,
-    messages: [{ role: "user", content: request.userPrompt }],
-  };
 
   const response = await fetchWithTimeout(endpoint, {
     method: "POST",
@@ -122,12 +119,18 @@ async function callAnthropic(
       "x-api-key": config.apiKey!,
       "anthropic-version": "2023-06-01",
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      model: config.model,
+      max_tokens: request.maxTokens ?? config.maxTokens ?? 4000,
+      temperature: request.temperature ?? config.temperature ?? 0.2,
+      system: request.systemPrompt,
+      messages: [{ role: "user", content: request.userPrompt }],
+    }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Anthropic error (${response.status}): ${error.slice(0, 500)}`);
+    throw new Error(`Anthropic ${response.status}: ${error.slice(0, 500)}`);
   }
 
   const data = (await response.json()) as {
@@ -136,10 +139,8 @@ async function callAnthropic(
     model: string;
   };
 
-  const text = data.content.find((c) => c.type === "text")?.text || "";
-
   return {
-    text,
+    text: data.content.find((c) => c.type === "text")?.text || "",
     provider: "anthropic",
     model: data.model || config.model,
     usage: data.usage ? {
@@ -157,24 +158,13 @@ async function callAzureOpenAI(
   request: AnalysisRequest
 ): Promise<AnalysisResponse> {
   const startTime = Date.now();
-  
-  // Azure endpoint format: https://{resource}.openai.azure.com/openai/deployments/{deployment}/chat/completions?api-version={version}
   let endpoint = config.endpoint!;
   const apiVersion = config.apiVersion || "2024-08-01-preview";
-  
+
   if (!endpoint.includes("api-version")) {
     endpoint += endpoint.includes("?") ? "&" : "?";
     endpoint += `api-version=${apiVersion}`;
   }
-
-  const body = {
-    messages: [
-      { role: "system", content: request.systemPrompt },
-      { role: "user", content: request.userPrompt },
-    ],
-    temperature: request.temperature ?? config.temperature ?? 0.2,
-    max_tokens: request.maxTokens ?? config.maxTokens ?? 4000,
-  };
 
   const response = await fetchWithTimeout(endpoint, {
     method: "POST",
@@ -182,12 +172,19 @@ async function callAzureOpenAI(
       "Content-Type": "application/json",
       "api-key": config.apiKey!,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      messages: [
+        { role: "system", content: request.systemPrompt },
+        { role: "user", content: request.userPrompt },
+      ],
+      temperature: request.temperature ?? config.temperature ?? 0.2,
+      max_tokens: request.maxTokens ?? config.maxTokens ?? 4000,
+    }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Azure OpenAI error (${response.status}): ${error.slice(0, 500)}`);
+    throw new Error(`Azure OpenAI ${response.status}: ${error.slice(0, 500)}`);
   }
 
   const data = (await response.json()) as {
@@ -196,10 +193,8 @@ async function callAzureOpenAI(
     model: string;
   };
 
-  const text = data.choices[0]?.message?.content || "";
-
   return {
-    text,
+    text: data.choices[0]?.message?.content || "",
     provider: "azure-openai",
     model: data.model || config.model,
     usage: data.usage ? {
@@ -211,36 +206,31 @@ async function callAzureOpenAI(
   };
 }
 
-// ============ Ollama Adapter ============
+// ============ Ollama Adapter (LOCAL ONLY) ============
 async function callOllama(
   config: AiProviderConfig,
   request: AnalysisRequest
 ): Promise<AnalysisResponse> {
   const startTime = Date.now();
   const endpoint = config.endpoint || PROVIDER_DEFAULTS.ollama.endpoint!;
-  
-  // Ollama uses a simpler format
-  const body = {
-    model: config.model,
-    prompt: `${request.systemPrompt}\n\n${request.userPrompt}`,
-    stream: false,
-    options: {
-      temperature: request.temperature ?? config.temperature ?? 0.2,
-      num_predict: request.maxTokens ?? config.maxTokens ?? 4000,
-    },
-  };
 
   const response = await fetchWithTimeout(endpoint, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: config.model,
+      prompt: `${request.systemPrompt}\n\n${request.userPrompt}`,
+      stream: false,
+      options: {
+        temperature: request.temperature ?? config.temperature ?? 0.2,
+        num_predict: request.maxTokens ?? config.maxTokens ?? 4000,
+      },
+    }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Ollama error (${response.status}): ${error.slice(0, 500)}`);
+    throw new Error(`Ollama ${response.status}: ${error.slice(0, 500)}`);
   }
 
   const data = (await response.json()) as {
@@ -262,40 +252,33 @@ async function callOllama(
   };
 }
 
-// ============ Generic OpenAI-Compatible Adapter ============
+// ============ Generic OpenAI-Compatible Adapter (LOCAL OR CLOUD) ============
 async function callGeneric(
   config: AiProviderConfig,
   request: AnalysisRequest
 ): Promise<AnalysisResponse> {
   const startTime = Date.now();
-  
-  const body = {
-    model: config.model,
-    messages: [
-      { role: "system", content: request.systemPrompt },
-      { role: "user", content: request.userPrompt },
-    ],
-    temperature: request.temperature ?? config.temperature ?? 0.2,
-    max_tokens: request.maxTokens ?? config.maxTokens ?? 4000,
-  };
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  
-  if (config.apiKey) {
-    headers.Authorization = `Bearer ${config.apiKey}`;
-  }
 
   const response = await fetchWithTimeout(config.endpoint!, {
     method: "POST",
-    headers,
-    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+      ...(config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {}),
+    },
+    body: JSON.stringify({
+      model: config.model,
+      messages: [
+        { role: "system", content: request.systemPrompt },
+        { role: "user", content: request.userPrompt },
+      ],
+      temperature: request.temperature ?? config.temperature ?? 0.2,
+      max_tokens: request.maxTokens ?? config.maxTokens ?? 4000,
+    }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`API error (${response.status}): ${error.slice(0, 500)}`);
+    throw new Error(`API ${response.status}: ${error.slice(0, 500)}`);
   }
 
   const data = (await response.json()) as {
@@ -305,10 +288,8 @@ async function callGeneric(
     model?: string;
   };
 
-  const text = data.choices?.[0]?.message?.content || data.choices?.[0]?.text || data.text || "";
-
   return {
-    text,
+    text: data.choices?.[0]?.message?.content || data.choices?.[0]?.text || data.text || "",
     provider: "generic",
     model: data.model || config.model,
     usage: data.usage ? {
@@ -341,31 +322,146 @@ export async function callProvider(
   }
 }
 
-// Health check for a provider
+/**
+ * Lightweight health check — validates credentials with a minimal request.
+ */
 export async function checkProviderHealth(config: AiProviderConfig): Promise<{
-  status: "healthy" | "degraded" | "unavailable";
+  status: "healthy" | "degraded" | "unavailable" | "not_configured";
   latencyMs: number;
   error?: string;
 }> {
   const startTime = Date.now();
-  
+
+  if (!config.enabled) {
+    return { status: "not_configured", latencyMs: 0 };
+  }
+
   try {
-    // Send a minimal test prompt
-    const testRequest: AnalysisRequest = {
-      systemPrompt: "You are a test system. Respond with only the word 'OK'.",
-      userPrompt: "Test",
-      documentCount: 1,
-      estimatedTokens: 50,
-    };
+    switch (config.key) {
+      case "ollama": {
+        // Local Ollama: just check if the server is reachable
+        const baseUrl = (config.endpoint || PROVIDER_DEFAULTS.ollama.endpoint!)
+          .replace(/\/api\/generate.*$/, "")
+          .replace(/\/api\/chat.*$/, "");
+        const response = await fetchWithTimeout(`${baseUrl}/api/tags`, {
+          method: "GET",
+        }, HEALTH_TIMEOUT);
+        if (response.ok) {
+          return { status: "healthy", latencyMs: Date.now() - startTime };
+        }
+        throw new Error(`Ollama not reachable (${response.status})`);
+      }
 
-    const response = await callProvider(config, testRequest);
-    const latencyMs = Date.now() - startTime;
+      case "anthropic": {
+        if (!config.apiKey) throw new Error("API key not configured");
+        const endpoint = config.endpoint || PROVIDER_DEFAULTS.anthropic.endpoint!;
+        const response = await fetchWithTimeout(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": config.apiKey,
+            "anthropic-version": "2023-06-01",
+          },
+          body: JSON.stringify({
+            model: config.model,
+            max_tokens: 5,
+            messages: [{ role: "user", content: "Say OK" }],
+          }),
+        }, HEALTH_TIMEOUT);
+        if (response.ok) {
+          return { status: "healthy", latencyMs: Date.now() - startTime };
+        }
+        const errorText = await response.text();
+        let detail = "";
+        try {
+          const parsed = JSON.parse(errorText) as { error?: { message?: string; type?: string } };
+          detail = parsed.error?.message || parsed.error?.type || "";
+        } catch {
+          detail = errorText.slice(0, 200);
+        }
+        throw new Error(`Anthropic ${response.status}${detail ? `: ${detail}` : ""}`);
+      }
 
-    if (response.text.toLowerCase().includes("ok")) {
-      return { status: "healthy", latencyMs };
+      case "azure-openai": {
+        if (!config.apiKey) throw new Error("API key not configured");
+        if (!config.endpoint || config.endpoint.includes("{your-resource}")) {
+          throw new Error("Endpoint not configured — set your Azure resource URL and deployment name");
+        }
+        let endpoint = config.endpoint;
+        const apiVersion = config.apiVersion || "2024-08-01-preview";
+        if (!endpoint.includes("api-version")) {
+          endpoint += endpoint.includes("?") ? "&" : "?";
+          endpoint += `api-version=${apiVersion}`;
+        }
+        const response = await fetchWithTimeout(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "api-key": config.apiKey,
+          },
+          body: JSON.stringify({
+            messages: [{ role: "user", content: "Say OK" }],
+            max_tokens: 5,
+          }),
+        }, HEALTH_TIMEOUT);
+        if (response.ok) {
+          return { status: "healthy", latencyMs: Date.now() - startTime };
+        }
+        const azureError = await response.text().catch(() => "");
+        throw new Error(`Azure ${response.status}: ${azureError.slice(0, 200)}`);
+      }
+
+      case "openai": {
+        if (!config.apiKey) throw new Error("API key not configured");
+        const endpoint = config.endpoint || PROVIDER_DEFAULTS.openai.endpoint!;
+        const response = await fetchWithTimeout(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${config.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: config.model,
+            messages: [{ role: "user", content: "Say OK" }],
+            max_tokens: 5,
+          }),
+        }, HEALTH_TIMEOUT);
+        if (response.ok) {
+          return { status: "healthy", latencyMs: Date.now() - startTime };
+        }
+        const openaiError = await response.text().catch(() => "");
+        let openaiDetail = "";
+        try {
+          const parsed = JSON.parse(openaiError) as { error?: { message?: string } };
+          openaiDetail = parsed.error?.message || "";
+        } catch {
+          openaiDetail = openaiError.slice(0, 200);
+        }
+        throw new Error(`OpenAI ${response.status}${openaiDetail ? `: ${openaiDetail}` : ""}`);
+      }
+
+      case "generic": {
+        if (!config.endpoint) throw new Error("Endpoint not configured");
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (config.apiKey) headers.Authorization = `Bearer ${config.apiKey}`;
+        const response = await fetchWithTimeout(config.endpoint, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            model: config.model,
+            messages: [{ role: "user", content: "Say OK" }],
+            max_tokens: 5,
+          }),
+        }, HEALTH_TIMEOUT);
+        if (response.ok) {
+          return { status: "healthy", latencyMs: Date.now() - startTime };
+        }
+        throw new Error(`Endpoint ${response.status}`);
+      }
+
+      default:
+        throw new Error("Unknown provider");
     }
-    
-    return { status: "degraded", latencyMs };
   } catch (error) {
     return {
       status: "unavailable",

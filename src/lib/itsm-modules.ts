@@ -190,8 +190,12 @@ export function detectModulesFromText(value: string): ItsmModuleKey[] {
   return Array.from(hits);
 }
 
-export function moduleCoveragePromptBlock() {
-  return ITSM_MODULE_LIST.map((module) => {
+export function moduleCoveragePromptBlock(scopedModules?: ItsmModuleKey[]) {
+  const modules = scopedModules?.length
+    ? ITSM_MODULE_LIST.filter((m) => scopedModules.includes(m.key))
+    : ITSM_MODULE_LIST;
+
+  return modules.map((module) => {
     const focus = module.analysisFocus.map((item) => `  - ${item}`).join("\n");
     return [
       `${module.label} (${module.key})`,
@@ -200,4 +204,10 @@ export function moduleCoveragePromptBlock() {
       focus,
     ].join("\n");
   }).join("\n\n");
+}
+
+export function moduleScopeInstruction(scopedModules?: ItsmModuleKey[]): string {
+  if (!scopedModules?.length) return "";
+  const labels = scopedModules.map((k) => ITSM_MODULES[k]?.label ?? k).join(", ");
+  return `\nMODULE SCOPE RESTRICTION:\nLimit the analysis to ONLY these modules: ${labels}.\nDo not produce findings, recommendations, or coverage assessments for modules outside this list.\nIf the XML contains data for excluded modules, note it briefly under a single 'Out of Scope' line but do not analyze it.\n`;
 }
