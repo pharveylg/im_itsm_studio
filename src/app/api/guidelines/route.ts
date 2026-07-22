@@ -1,169 +1,188 @@
-import { randomUUID } from "node:crypto";
+/**
+ * Guidelines management API.
+ * Supports listing, creating, updating, and deleting stored guidelines.
+ * POST uses FormData (multipart) to handle large files without JSON body limits.
+ */
+
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { sql } from "drizzle-orm";
+import {
+  deleteGuideline,
+  listGuidelines,
+  storeGuideline,
+  updateGuideline,
+} from "@/lib/guidelines-store";
 import { extractGuidelineDocument } from "@/lib/document-extract";
-import { storeGuideline } from "@/lib/guidelines-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const MAX_FILE_BYTES = 12_000_000;
-const MAX_CHUNK_BASE64_CHARS = 950_000;
-
-async function ensureUploadTable() {
-  await db.execute(sql`
-    CREATE TABLE IF NOT EXISTS guideline_upload_chunks (
-      upload_id text NOT NULL,
-      chunk_index integer NOT NULL,
-      total_chunks integer NOT NULL,
-      content_base64 text NOT NULL,
-      created_at timestamptz NOT NULL DEFAULT now(),
-      PRIMARY KEY (upload_id, chunk_index)
-    )
-  `);
-  // Remove abandoned uploads automatically.
-  await db.execute(sql`
-    DELETE FROM guideline_upload_chunks
-    WHERE created_at < now() - interval '24 hours'
-  `);
+/** GET: List all stored guidelines. */
+export async function GET() {
+  try {
+    const guidelines = await listGuidelines();
+    return NextResponse.json({ ok: true, guidelines });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "Failed to list guidelines" },
+      { status: 500 }
+    );
+  }
 }
 
+/** POST: Store a new guideline. Accepts both FormData (multipart) and JSON. */
 export async function POST(request: Request) {
   try {
-    // Ensure we can connect to the DB and the table exists
-    try {
-      await ensureUploadTable();
-    } catch (dbError) {
-      console.error("Database connection/table error:", dbError);
-      return NextResponse.json({
-        ok: false,
-        error: `Database Error: ${dbError instanceof Error ? dbError.message : String(dbError)}. Check Vercel DATABASE_URL.`,
-      }, { status: 503 });
-    }
+    const contentType = request.headers.get("content-type") ?? "";
 
-    const body = await request.json();
+    let name: string;
+    let description: string | undefined;
+    let filename: string;
+    let fileContentType: string;
+    let encoding: "utf8" | "base64";
+    let content: string;
 
-    if (body.action === "init") {
-      if (!Number.isFinite(body.fileSize) || body.fileSize <= 0) {
-        return NextResponse.json({ ok: false, error: "The selected file is empty." }, { status: 400 });
-      }
-      if (body.fileSize > MAX_FILE_BYTES) {
-        return NextResponse.json(
-          { ok: false, error: `File exceeds the ${MAX_FILE_BYTES / 1_000_000} MB guideline limit.` },
-          { status: 413 },
-        );
-      }
-      if (!Number.isInteger(body.totalChunks) || body.totalChunks < 1 || body.totalChunks > 32) {
-        return NextResponse.json({ ok: false, error: "Invalid upload chunk count." }, { status: 400 });
-      }
-      return NextResponse.json({ ok: true, uploadId: randomUUID() });
-    }
+    if (contentType.includes("multipart/form-data")) {
+      // ── FormData upload (preferred for large files) ──
+      const form = await request.formData();
+      name = String(form.get("name") ?? "").trim();
+      description = (form.get("description") as string | null)?.trim() || undefined;
+      const file = form.get("file") as File | null;
 
-    if (body.action === "chunk") {
-      if (!body.uploadId || !Number.isInteger(body.index) || body.index < 0) {
-        return NextResponse.json({ ok: false, error: "Invalid upload chunk." }, { status: 400 });
+      if (!name) {
+        return NextResponse.json({ ok: false, error: "Give this guideline a name." }, { status: 400 });
       }
-      if (!body.contentBase64 || body.contentBase64.length > MAX_CHUNK_BASE64_CHARS) {
-        return NextResponse.json({ ok: false, error: "Upload chunk is too large." }, { status: 413 });
+      if (!file || file.size === 0) {
+        return NextResponse.json({ ok: false, error: "Select a file to upload." }, { status: 400 });
       }
-      await db.execute(sql`
-        INSERT INTO guideline_upload_chunks (
-          upload_id, chunk_index, total_chunks, content_base64
-        ) VALUES (
-          ${body.uploadId}, ${body.index}, ${body.totalChunks}, ${body.contentBase64}
-        )
-        ON CONFLICT (upload_id, chunk_index)
-        DO UPDATE SET
-          content_base64 = EXCLUDED.content_base64,
-          total_chunks = EXCLUDED.total_chunks,
-          created_at = now()
-      `);
-      return NextResponse.json({ ok: true, received: body.index });
-    }
-
-    if (body.action === "cancel") {
-      await db.execute(sql`
-        DELETE FROM guideline_upload_chunks WHERE upload_id = ${body.uploadId}
-      `);
-      return NextResponse.json({ ok: true });
-    }
-
-    if (body.action === "complete") {
-      if (!body.name?.trim() || !body.filename || !body.uploadId) {
-        return NextResponse.json({ ok: false, error: "Guideline name and file are required." }, { status: 400 });
+      if (file.size > 8_000_000) {
+        return NextResponse.json({ ok: false, error: "File exceeds 8 MB limit." }, { status: 400 });
       }
 
-      const result = await db.execute(sql`
-        SELECT chunk_index, total_chunks, content_base64
-        FROM guideline_upload_chunks
-        WHERE upload_id = ${body.uploadId}
-        ORDER BY chunk_index ASC
-      `);
-      const rows = result.rows as Array<{
-        chunk_index: number;
-        total_chunks: number;
-        content_base64: string;
-      }>;
+      filename = file.name;
+      fileContentType = file.type || "application/octet-stream";
 
-      if (rows.length !== body.totalChunks) {
-        return NextResponse.json(
-          { ok: false, error: `Upload incomplete: received ${rows.length} of ${body.totalChunks} chunks.` },
-          { status: 409 },
-        );
-      }
-      
-      const buffers = rows.map((row) => Buffer.from(row.content_base64, "base64"));
-      const fileBuffer = Buffer.concat(buffers);
-      
-      if (fileBuffer.byteLength !== body.fileSize) {
-        return NextResponse.json(
-          { ok: false, error: "Uploaded file size did not match the source file. Try again." },
-          { status: 409 },
-        );
-      }
-
-      const filename = body.filename.trim();
+      // Detect binary vs text
       const ext = filename.toLowerCase().split(".").pop() ?? "";
-      const binary = ext === "pdf" || ext === "docx";
-      
-      const extracted = await extractGuidelineDocument({
-        name: filename,
-        contentType: body.contentType || "application/octet-stream",
-        content: binary ? fileBuffer.toString("base64") : fileBuffer.toString("utf8"),
-        encoding: binary ? "base64" : "utf8",
-      });
+      const isBinary = ext === "pdf" || ext === "docx" || ext === "doc"
+        || fileContentType.includes("pdf")
+        || fileContentType.includes("wordprocessingml");
 
-      const guideline = await storeGuideline({
-        name: body.name.trim(),
-        description: body.description?.trim() || undefined,
-        originalFilename: filename,
-        contentType: body.contentType || "application/octet-stream",
-        extractedText: extracted.text,
-        fileSizeBytes: fileBuffer.byteLength,
-      });
-
-      await db.execute(sql`
-        DELETE FROM guideline_upload_chunks WHERE upload_id = ${body.uploadId}
-      `);
-
-      return NextResponse.json({
-        ok: true,
-        guideline,
-        extraction: {
-          kind: extracted.summary.kind,
-          characters: extracted.summary.characters,
-          wordCount: extracted.summary.wordCount,
-          warnings: extracted.summary.warnings,
-        },
-      });
+      if (isBinary) {
+        const buffer = await file.arrayBuffer();
+        content = Buffer.from(buffer).toString("base64");
+        encoding = "base64";
+      } else {
+        content = await file.text();
+        encoding = "utf8";
+      }
+    } else {
+      // ── JSON fallback ──
+      const body = (await request.json()) as {
+        name: string;
+        description?: string;
+        filename: string;
+        contentType?: string;
+        encoding?: "utf8" | "base64";
+        content: string;
+      };
+      name = body.name?.trim() ?? "";
+      description = body.description;
+      filename = body.filename;
+      fileContentType = body.contentType ?? "application/octet-stream";
+      encoding = body.encoding ?? "utf8";
+      content = body.content;
     }
 
-    return NextResponse.json({ ok: false, error: "Unsupported upload action." }, { status: 400 });
+    if (!name || !filename || !content) {
+      return NextResponse.json(
+        { ok: false, error: "Name, filename, and content are required." },
+        { status: 400 }
+      );
+    }
+
+    // Extract text from the document
+    const extracted = await extractGuidelineDocument({
+      name: filename,
+      contentType: fileContentType,
+      content,
+      encoding,
+    });
+
+    const guideline = await storeGuideline({
+      name,
+      description,
+      originalFilename: filename,
+      contentType: fileContentType,
+      extractedText: extracted.text,
+      fileSizeBytes: extracted.summary.bytes,
+    });
+
+    return NextResponse.json({ ok: true, guideline });
   } catch (error) {
-    console.error("Guideline chunk upload failed", error);
-    const message = error instanceof Error ? error.message : "Guideline upload failed.";
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "Failed to store guideline" },
+      { status: 400 }
+    );
+  }
+}
+
+/** PATCH: Update guideline metadata. */
+export async function PATCH(request: Request) {
+  try {
+    const body = (await request.json()) as {
+      id: string;
+      name?: string;
+      description?: string;
+    };
+
+    if (!body.id) {
+      return NextResponse.json(
+        { ok: false, error: "Guideline ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const guideline = await updateGuideline(body.id, {
+      name: body.name,
+      description: body.description,
+    });
+
+    if (!guideline) {
+      return NextResponse.json(
+        { ok: false, error: "Guideline not found." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ ok: true, guideline });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "Failed to update guideline" },
+      { status: 400 }
+    );
+  }
+}
+
+/** DELETE: Remove a guideline. */
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { ok: false, error: "Guideline ID is required." },
+        { status: 400 }
+      );
+    }
+
+    await deleteGuideline(id);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "Failed to delete guideline" },
+      { status: 400 }
+    );
   }
 }
