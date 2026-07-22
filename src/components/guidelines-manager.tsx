@@ -20,6 +20,7 @@ export function GuidelinesManager({
   const [uploadName, setUploadName] = useState("");
   const [uploadDescription, setUploadDescription] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -47,6 +48,27 @@ export function GuidelinesManager({
     );
   }
 
+  async function postUploadAction<T>(body: Record<string, unknown>): Promise<T> {
+    const response = await fetch("/api/guidelines/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const text = await response.text();
+    let payload: { ok?: boolean; error?: string } & Partial<T>;
+    try {
+      payload = JSON.parse(text) as { ok?: boolean; error?: string } & Partial<T>;
+    } catch {
+      throw new Error(
+        `Upload service returned ${response.status} instead of JSON. Check the latest Vercel function logs and confirm DATABASE_URL is configured.`,
+      );
+    }
+    if (!response.ok || !payload.ok) {
+      throw new Error(payload.error || `Upload failed with status ${response.status}.`);
+    }
+    return payload as T;
+  }
+
   async function handleUpload() {
     const fileInput = fileInputRef.current;
     if (!fileInput?.files?.length) {
@@ -65,55 +87,72 @@ export function GuidelinesManager({
       setError(`Unsupported file type (.${ext}). Use XML, DOCX, PDF, TXT, or MD.`);
       return;
     }
-    if (file.size > 8_000_000) {
-      setError("File exceeds 8 MB limit.");
+    if (file.size > 12_000_000) {
+      setError("File exceeds the 12 MB guideline limit.");
       return;
     }
 
+    const chunkBytes = 500_000;
+    const totalChunks = Math.ceil(file.size / chunkBytes);
+    let uploadId: string | null = null;
     setUploading(true);
+    setUploadProgress(0);
     setError(null);
 
     try {
-      // Use FormData so large files don't hit JSON body limits
-      const form = new FormData();
-      form.append("name", uploadName);
-      if (uploadDescription) form.append("description", uploadDescription);
-      form.append("file", file);
+      const init = await postUploadAction<{ ok: true; uploadId: string }>({
+        action: "init",
+        fileSize: file.size,
+        totalChunks,
+      });
+      uploadId = init.uploadId;
 
-      const response = await fetch("/api/guidelines", {
-        method: "POST",
-        body: form,
-        // No Content-Type header — browser sets multipart boundary automatically
+      for (let index = 0; index < totalChunks; index += 1) {
+        const start = index * chunkBytes;
+        const end = Math.min(file.size, start + chunkBytes);
+        const buffer = await file.slice(start, end).arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = "";
+        const conversionChunk = 0x8000;
+        for (let offset = 0; offset < bytes.length; offset += conversionChunk) {
+          binary += String.fromCharCode(...bytes.subarray(offset, offset + conversionChunk));
+        }
+        await postUploadAction<{ ok: true }>({
+          action: "chunk",
+          uploadId,
+          index,
+          totalChunks,
+          contentBase64: btoa(binary),
+        });
+        setUploadProgress(Math.round(((index + 1) / (totalChunks + 1)) * 100));
+      }
+
+      const completed = await postUploadAction<{
+        ok: true;
+        guideline: StoredGuideline;
+        extraction: { kind: string; characters: number; wordCount: number; warnings: string[] };
+      }>({
+        action: "complete",
+        uploadId,
+        totalChunks,
+        name: uploadName,
+        description: uploadDescription || undefined,
+        filename: file.name,
+        contentType: file.type,
+        fileSize: file.size,
       });
 
-      // Guard against non-JSON responses (e.g. Next.js error pages)
-      const text = await response.text();
-      let data: { ok: boolean; guideline?: StoredGuideline; error?: string };
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error(
-          response.ok
-            ? "Server returned an unexpected response. Check server logs."
-            : `Server error (${response.status}). The file may be too large or in an unsupported format.`
-        );
-      }
-
-      if (!data.ok) {
-        throw new Error(data.error || "Upload failed");
-      }
-
+      setUploadProgress(100);
       await fetchGuidelines();
       setShowUpload(false);
       setUploadName("");
       setUploadDescription("");
       fileInput.value = "";
-
-      // Auto-select the newly uploaded guideline
-      if (data.guideline) {
-        onSelectionChange([...selectedIds, data.guideline.id]);
-      }
+      onSelectionChange([...selectedIds, completed.guideline.id]);
     } catch (e) {
+      if (uploadId) {
+        void postUploadAction({ action: "cancel", uploadId }).catch(() => undefined);
+      }
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setUploading(false);
@@ -173,15 +212,23 @@ export function GuidelinesManager({
               accept=".xml,.docx,.pdf,.txt,.md,.markdown,text/xml,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
               className="w-full text-xs text-ink/60"
             />
-            <p className="text-[10px] text-ink/40">XML · DOCX · PDF · TXT · MD — up to 8 MB</p>
-            {error && <p className="text-xs text-rose-600">{error}</p>}
+            <p className="text-[10px] text-ink/40">XML · DOCX · PDF · TXT · MD — up to 12 MB</p>
+            {uploading && (
+              <div className="space-y-1">
+                <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full bg-pine transition-all" style={{ width: `${uploadProgress}%` }} />
+                </div>
+                <p className="text-right font-mono text-[10px] text-ink/45">{uploadProgress}%</p>
+              </div>
+            )}
+            {error && <p className="rounded-lg bg-rose-50 p-2 text-xs leading-5 text-rose-700">{error}</p>}
             <button
               type="button"
               onClick={handleUpload}
               disabled={uploading}
               className="w-full rounded-lg bg-pine px-3 py-2 text-xs font-bold text-paper hover:bg-pine-soft disabled:opacity-50"
             >
-              {uploading ? "Extracting & storing..." : "Store Guideline"}
+              {uploading ? `Uploading ${uploadProgress}%` : "Store Guideline"}
             </button>
           </div>
         )}
@@ -282,15 +329,24 @@ export function GuidelinesManager({
               accept=".xml,.docx,.pdf,.txt,.md,.markdown,text/xml,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
               className="mt-2 w-full text-sm text-ink/60"
             />
+            <p className="mt-1 text-[10px] text-ink/40">XML · DOCX · PDF · TXT · MD — up to 12 MB</p>
           </div>
-          {error && <p className="text-sm text-rose-600">{error}</p>}
+          {uploading && (
+            <div className="space-y-1">
+              <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full rounded-full bg-pine transition-all" style={{ width: `${uploadProgress}%` }} />
+              </div>
+              <p className="text-right font-mono text-[10px] text-ink/45">{uploadProgress}%</p>
+            </div>
+          )}
+          {error && <p className="rounded-lg bg-rose-50 p-3 text-sm leading-5 text-rose-700">{error}</p>}
           <button
             type="button"
             onClick={handleUpload}
             disabled={uploading}
             className="rounded-xl bg-pine px-6 py-3 font-display text-sm font-bold text-paper hover:bg-pine-soft disabled:opacity-50"
           >
-            {uploading ? "Storing..." : "Store Guideline"}
+            {uploading ? `Uploading ${uploadProgress}%` : "Store Guideline"}
           </button>
         </div>
       )}

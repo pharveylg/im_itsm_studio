@@ -28,8 +28,8 @@ export type GuidelineBundle = {
   totalBytes: number;
 };
 
-const MAX_GUIDELINE_FILE_BYTES = 4_000_000;
-const MAX_GUIDELINE_TOTAL_BYTES = 8_000_000;
+const MAX_GUIDELINE_FILE_BYTES = 12_000_000;
+const MAX_GUIDELINE_TOTAL_BYTES = 20_000_000;
 const MAX_GUIDELINE_TEXT_CHARS = 80_000;
 const MAX_EXCERPT_CHARS = 2_000;
 
@@ -160,7 +160,7 @@ export async function extractGuidelineDocument(input: GuidelineDocumentInput): P
 
   if (!bytes) throw new Error(`${name}: guideline file is empty.`);
   if (bytes > MAX_GUIDELINE_FILE_BYTES) {
-    throw new Error(`${name}: guideline file exceeds 4 MB.`);
+    throw new Error(`${name}: guideline file exceeds 12 MB.`);
   }
 
   const kind = detectKind(name, input.contentType, buffer);
