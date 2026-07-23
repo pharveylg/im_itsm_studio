@@ -38,7 +38,7 @@ export type CommunicationsContext = {
 const MAX_EMAIL_BYTES = 4_000_000;
 const MAX_TOTAL_EMAIL_BYTES = 12_000_000;
 const MAX_EMAIL_BODY_CHARS = 24_000;
-const MAX_COMMS_CONTEXT_CHARS = 140_000;
+const MAX_COMMS_CONTEXT_CHARS = 60_000;
 
 function decode(input: EmailDocumentInput) {
   return Buffer.from(input.content, input.encoding === "base64" ? "base64" : "utf8");

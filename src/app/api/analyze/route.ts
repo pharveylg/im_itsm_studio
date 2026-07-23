@@ -198,7 +198,7 @@ export async function POST(request: Request) {
             communications,
           }),
           temperature: providerConfig.temperature,
-          maxTokens: Math.max(providerConfig.maxTokens ?? 0, 16_000),
+          maxTokens: providerConfig.maxTokens ?? 6_000,
           documentCount: documents.length + communications.emails.length,
           estimatedTokens: Math.ceil(
             (guidelineBundle.text.length + JSON.stringify(context).length + communications.promptContext.length) / 4,
@@ -214,7 +214,7 @@ export async function POST(request: Request) {
             scopedModules,
           ),
           temperature: providerConfig.temperature,
-          maxTokens: Math.max(providerConfig.maxTokens ?? 0, 16_000),
+          maxTokens: providerConfig.maxTokens ?? 6_000,
           documentCount: documents.length,
           estimatedTokens: Math.ceil((guidelineBundle.text.length + JSON.stringify(context).length) / 4),
         };
