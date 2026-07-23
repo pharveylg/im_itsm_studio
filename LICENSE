@@ -1,0 +1,21 @@
+OPERATIONAL ANALYSIS STANDARD (OAS) — INTERNAL USE LICENCE
+
+Copyright (c) [[ORGANISATION]]. All rights reserved.
+
+1. Grant of Use
+   This documentation is provided for internal use within the organisation and its
+   authorised service management functions.
+
+2. Restrictions
+   The OAS library may not be copied, distributed, published, or disclosed to external
+   parties without prior written authorisation from the owning organisation.
+
+3. No Warranty
+   The OAS library is provided "as is" for operational guidance. It complements, and does
+   not replace, established ITIL and ITSM processes or platform-native controls.
+
+4. Governance
+   All usage and modification of OAS content is subject to the governance defined in
+   OAS-000 (Operational Analysis Standard — Governance).
+
+Replace [[ORGANISATION]] with the legal entity that owns this repository before release.
