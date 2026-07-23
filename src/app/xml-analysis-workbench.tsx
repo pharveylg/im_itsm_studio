@@ -397,27 +397,56 @@ export function XmlAnalysisWorkbench() {
     setReviewState({});
     setShowFinalReport(false);
     try {
+      const requestBody = JSON.stringify({
+        documents: files.map(({ name, xml }) => ({ name, xml })),
+        emailDocuments: emailFiles.map(({ name, contentType, content, encoding }) => ({
+          name,
+          contentType,
+          content,
+          encoding,
+        })),
+        analysisMode,
+        guidelines,
+        guidelineIds: selectedGuidelineIds,
+        scopedModules: scopedModules.length > 0 ? scopedModules : undefined,
+        focus,
+        includeRaw,
+        provider: selectedProvider === "default" ? undefined : selectedProvider,
+      });
+
+      // Vercel serverless rejects request bodies over ~4.5 MB with a plain-text
+      // error page, which is not JSON. Guard before sending.
+      if (requestBody.length > 4_000_000) {
+        setResult({
+          ok: false,
+          error: `The analysis packet is ${(requestBody.length / 1_000_000).toFixed(1)} MB, which exceeds the ~4 MB deployment request limit. Remove some XML extracts or emails, or untick "Include bounded raw XML excerpts", then retry.`,
+        });
+        setIsAnalyzing(false);
+        return;
+      }
+
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          documents: files.map(({ name, xml }) => ({ name, xml })),
-          emailDocuments: emailFiles.map(({ name, contentType, content, encoding }) => ({
-            name,
-            contentType,
-            content,
-            encoding,
-          })),
-          analysisMode,
-          guidelines,
-          guidelineIds: selectedGuidelineIds,
-          scopedModules: scopedModules.length > 0 ? scopedModules : undefined,
-          focus,
-          includeRaw,
-          provider: selectedProvider === "default" ? undefined : selectedProvider,
-        }),
+        body: requestBody,
       });
-      const payload = (await response.json()) as AnalyzeResponse;
+
+      const responseText = await response.text();
+      let payload: AnalyzeResponse;
+      try {
+        payload = JSON.parse(responseText) as AnalyzeResponse;
+      } catch {
+        const looksLikeTimeout = response.status === 504 || /timed?\s*out|timeout/i.test(responseText);
+        const looksTooLarge = response.status === 413 || /too large|entity too large/i.test(responseText);
+        payload = {
+          ok: false,
+          error: looksLikeTimeout
+            ? `The analysis timed out on the server (status ${response.status}). Reduce the packet size, untick "Include bounded raw XML excerpts", select fewer modules, or use a faster model. On Vercel Hobby the function limit is 60s; Pro allows up to 300s.`
+            : looksTooLarge
+              ? `The server rejected the request as too large (status ${response.status}). Remove some XML extracts or emails and retry.`
+              : `The analysis service returned status ${response.status} instead of JSON. This is usually a platform timeout or crash — check the Vercel function logs for /api/analyze. First bytes of the response: ${responseText.slice(0, 120)}`,
+        };
+      }
       setResult(payload);
     } catch (error) {
       setResult({ ok: false, error: error instanceof Error ? error.message : "Unable to reach the analysis service." });

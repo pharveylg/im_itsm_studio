@@ -215,7 +215,18 @@ export function KnowledgeAuthorConsole() {
         }),
       });
 
-      const payload = (await response.json()) as KnowledgeResponse;
+      const responseText = await response.text();
+      let payload: KnowledgeResponse;
+      try {
+        payload = JSON.parse(responseText) as KnowledgeResponse;
+      } catch {
+        payload = {
+          ok: false,
+          error: response.status === 504 || /timed?\s*out|timeout/i.test(responseText)
+            ? `Article generation timed out on the server (status ${response.status}). Try a shorter style guide, fewer source documents, or a faster model.`
+            : `The service returned status ${response.status} instead of JSON. Check the Vercel function logs for /api/knowledge. First bytes: ${responseText.slice(0, 120)}`,
+        };
+      }
       setResult(payload);
       if (payload.ok) setOutputTab("preview");
     } catch (error) {
