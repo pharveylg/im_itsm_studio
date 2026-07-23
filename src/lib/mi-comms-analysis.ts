@@ -48,8 +48,24 @@ function extension(name: string) {
   return name.toLowerCase().split(".").pop() ?? "";
 }
 
+// Sections of an email that are not relevant to communications governance analysis
+// and should be excluded from the analysis context. Extend this list as needed.
+const EMAIL_EXCLUDE_MARKERS = [/bridge\s+details\s*:/i];
+
+function stripExcludedSections(text: string): string {
+  for (const marker of EMAIL_EXCLUDE_MARKERS) {
+    const idx = text.search(marker);
+    if (idx >= 0) return text.slice(0, idx).replace(/\s+$/, "");
+  }
+  return text;
+}
+
+function hasExcludedSection(text: string): boolean {
+  return EMAIL_EXCLUDE_MARKERS.some((marker) => marker.test(text));
+}
+
 function cleanText(value: string) {
-  return value
+  const cleaned = value
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<br\s*\/?>/gi, "\n")
@@ -62,8 +78,8 @@ function cleanText(value: string) {
     .replace(/&quot;/gi, '"')
     .replace(/[ \t]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
-    .trim()
-    .slice(0, MAX_EMAIL_BODY_CHARS);
+    .trim();
+  return stripExcludedSections(cleaned).slice(0, MAX_EMAIL_BODY_CHARS);
 }
 
 function addressToString(address: Address | undefined): string {
@@ -100,7 +116,12 @@ async function parseEml(input: EmailDocumentInput, buffer: Buffer): Promise<Emai
     body: cleanText(email.text || email.html || ""),
     attachmentNames: email.attachments.map((attachment) => attachment.filename).filter((name): name is string => Boolean(name)),
     bytes: buffer.byteLength,
-    warnings: email.text || email.html ? [] : ["No readable message body was found."],
+    warnings: [
+      ...(hasExcludedSection(email.text || email.html || "")
+        ? ["Trailing 'Bridge Details' section was excluded from analysis."]
+        : []),
+      ...(email.text || email.html ? [] : ["No readable message body was found."]),
+    ],
   };
 }
 
@@ -119,6 +140,7 @@ function parseMsg(input: EmailDocumentInput, buffer: Buffer): EmailEvidence {
   const warnings: string[] = [];
   if (!data.body && !data.bodyHtml) warnings.push("No readable message body was found in this MSG export.");
   else if (!data.body && data.bodyHtml) warnings.push("The message body was extracted from HTML because plain text was unavailable.");
+  if (hasExcludedSection(data.body || data.bodyHtml || "")) warnings.push("Trailing 'Bridge Details' section was excluded from analysis.");
 
   return {
     name: input.name,
@@ -151,7 +173,10 @@ function parseSimple(input: EmailDocumentInput, buffer: Buffer): EmailEvidence {
     body: cleanText(raw),
     attachmentNames: [],
     bytes: buffer.byteLength,
-    warnings: ["Headers were not available; verify sender, recipients, and timestamp manually."],
+    warnings: [
+      "Headers were not available; verify sender, recipients, and timestamp manually.",
+      ...(hasExcludedSection(raw) ? ["Trailing 'Bridge Details' section was excluded from analysis."] : []),
+    ],
   };
 }
 
