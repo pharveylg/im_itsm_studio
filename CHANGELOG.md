@@ -4,6 +4,24 @@ All notable changes to the OAS library are recorded here. The library as a whole
 semantic versioning: *Major* = breaking methodological change, *Minor* = new capability,
 *Patch* = editorial correction.
 
+## [1.1.0] — 2026-07-23
+
+### Added
+- Elaborated all six standards (OAS-000, OAS-101, OAS-201, OAS-301, OAS-401, OAS-501) for
+  professional depth and comprehensiveness:
+  - Expanded guiding principles with rationale and examples (OAS-000).
+  - Added Definitions sections, per-phase assessment guidance (indicators of strength/
+    weakness, common pitfalls), illustrative worked examples, and anti-patterns to each
+    methodology.
+  - Added glossaries and expanded lifecycle/QA detail to governance standards.
+- No methodological break; this is a Minor version (clarification and depth).
+
+### Changed
+- Bumped each standard from 1.0 to 1.1.
+- Updated library release to 1.1.0 in README.
+
+---
+
 ## [1.0.0] — 2026-07-23
 
 ### Added

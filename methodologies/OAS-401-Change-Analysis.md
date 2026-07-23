@@ -2,7 +2,7 @@
 document_id: OAS-401
 title: Change Analysis Methodology
 category: Analysis Methodology
-version: 1.0
+version: 1.1
 status: Approved
 owner: Operations
 classification: Internal
@@ -27,9 +27,22 @@ The methodology supports both:
 
 The objective is to determine whether a Change achieved its intended outcome while maintaining service stability and adhering to organisational governance.
 
+### What this methodology delivers
+
+- An assessment of planning integrity.
+- A judgement on whether risk and type were appropriate.
+- An evaluation of execution versus plan.
+- An assessment of rollback symmetry and recoverability.
+- A success classification grounded in evidence.
+- Evidence-based recommendations.
+
+### What it is not
+
+It evaluates the **Change itself**, not the organisational Change Management process, and not the technical root cause of any fault (that is OAS-301).
+
 ---
 
-# Scope
+## Scope
 
 This methodology applies to ServiceNow Change records including:
 
@@ -37,11 +50,25 @@ This methodology applies to ServiceNow Change records including:
 - Normal Changes
 - Emergency Changes
 
-It evaluates the Change itself rather than the organisational Change Management process.
+It evaluates the Change record rather than the organisational Change Management process.
 
 ---
 
-# Guiding Principles
+## Definitions
+
+| Term | Definition |
+|------|------------|
+| Standard Change | Low-risk, pre-approved, repeatable. |
+| Normal Change | Requires assessment and CAB approval. |
+| Emergency Change | Urgent; expedited or post-approval. |
+| Risk | Organisational risk classification (Low/Medium/High/Significant). |
+| Rollback Symmetry | Rollback planning proportionate to implementation planning. |
+| Recoverability | Ability to recover from failed implementation. |
+| Success Classification | Successful / Partially Successful / Unsuccessful / Unconfirmed. |
+
+---
+
+## Guiding Principles
 
 Change analysis shall:
 
@@ -54,48 +81,27 @@ Change analysis shall:
 
 ---
 
-# Supported Change Intent
+## Supported Change Intent
 
 Changes should first be classified according to operational intent.
 
-## 401A – Planned Enhancement
+### 401A – Planned Enhancement
 
-Examples include:
+Examples: new functionality, platform enhancement, infrastructure improvement, planned maintenance, technical debt reduction, service optimisation. Typically implemented as **Normal Changes**.
 
-- New functionality
-- Platform enhancement
-- Infrastructure improvement
-- Planned maintenance
-- Technical debt reduction
-- Service optimisation
+### 401B – Operational Remediation
 
-These are typically implemented as **Normal Changes**.
+Changes introduced in response to operational events: incident remediation, major incident recovery, problem corrective actions, preventive improvements, risk reduction. Evaluate alongside related Incident and Problem records where available.
 
 ---
 
-## 401B – Operational Remediation
+## Inputs
 
-Changes introduced in response to operational events including:
-
-- Incident remediation
-- Major Incident recovery
-- Problem corrective actions
-- Preventive improvements
-- Risk reduction
-
-Operational remediation should be evaluated alongside related Incident and Problem records where available.
-
----
-
-# Inputs
-
-## Mandatory
+### Mandatory
 
 - Change XML
 
----
-
-## Optional Supporting Evidence
+### Optional Supporting Evidence
 
 - Incident XML
 - Major Incident XML
@@ -112,7 +118,7 @@ Operational remediation should be evaluated alongside related Incident and Probl
 
 ---
 
-# Required Evidence
+## Required Evidence
 
 Assess available evidence including:
 
@@ -132,23 +138,27 @@ Every evidence source listed above shall be classified using the Evidence States
 
 ---
 
-# Analysis Methodology
+## Analysis Methodology
 
-## Phase 1 — Context
+### Phase 1 — Context
+
+**Objective:** Understand intent before judging execution.
 
 Establish:
 
 - Business objective
 - Technical objective
-- Change intent
+- Change intent (401A or 401B)
 - Related operational events
 - Service impact
 
+**Guidance:** A remediation change (401B) should be traced to the Incident/Problem it resolves. If no related record exists, that is a traceability gap.
+
 ---
 
-## Phase 2 — Planning Integrity
+### Phase 2 — Planning Integrity
 
-Evaluate planning quality.
+**Objective:** Judge whether the change was planned well.
 
 Assess:
 
@@ -161,20 +171,15 @@ Assess:
 - Communications planned
 - Resource planning
 
-Planning deficiencies should be identified separately from execution issues.
+**Guidance:** Planning deficiencies should be identified separately from execution issues. A change can be perfectly planned yet fail in execution, or poorly planned yet succeed by luck — the analysis must separate the two.
 
 ---
 
-## Phase 3 — Risk Assessment
+### Phase 3 — Risk Assessment
 
-Evaluate whether the assigned Change Risk accurately reflected the implementation.
+**Objective:** Determine whether the assigned Change Risk reflected reality.
 
-Approved organisational risk classifications:
-
-- Low
-- Medium
-- High
-- Significant
+Approved classifications: Low / Medium / High / Significant.
 
 Assess:
 
@@ -183,27 +188,25 @@ Assess:
 - Residual operational risk
 - Actual implementation risk
 
-Where risk appears inconsistent with implementation complexity or outcome, document the observation.
+**Guidance:** Where risk appears inconsistent with implementation complexity or outcome, document the observation. Example: a "Medium" risk assigned to a database schema change with customer impact and no tested rollback suggests under-classification.
 
 ---
 
-## Phase 4 — Change Classification
+### Phase 4 — Change Classification
 
-Verify the assigned Change Type.
+**Objective:** Confirm the Change Type was appropriate.
 
-Approved classifications:
+Approved classifications: Standard / Normal / Emergency.
 
-- Standard
-- Normal
-- Emergency
+Assess whether the selected Change Type reflected the nature and urgency of the implementation.
 
-Assess whether the selected Change Type appropriately reflected the nature and urgency of the implementation.
+**Guidance:** An "Emergency" type used to bypass CAB for a non-urgent change is a governance finding. A "Standard" type applied to a novel, never-before-run procedure is a misclassification.
 
 ---
 
-## Phase 5 — Implementation Assessment
+### Phase 5 — Implementation Assessment
 
-Evaluate execution.
+**Objective:** Evaluate execution versus the approved plan.
 
 Assess:
 
@@ -215,11 +218,13 @@ Assess:
 - Stakeholder communication
 - Schedule adherence
 
+**Guidance:** Deviations are not inherently bad, but unrecorded deviations are a governance and evidence-quality defect.
+
 ---
 
-## Phase 6 — Rollback Symmetry
+### Phase 6 — Rollback Symmetry
 
-Evaluate the relationship between implementation planning and rollback planning.
+**Objective:** Evaluate whether rollback planning matched implementation planning.
 
 Rollback planning should demonstrate a level of detail proportionate to the implementation plan.
 
@@ -231,13 +236,13 @@ Assess:
 - Recovery activities documented
 - Dependencies identified
 
-Where implementation planning is comprehensive but rollback planning is minimal, document the imbalance as an operational risk.
+**Guidance:** Where implementation planning is comprehensive but rollback planning is minimal, document the imbalance as an operational risk. Example: a 12-step implementation with a one-line "rollback if needed" is asymmetric.
 
 ---
 
-## Phase 7 — Recoverability Assessment
+### Phase 7 — Recoverability Assessment
 
-Evaluate organisational ability to recover from implementation failure.
+**Objective:** Judge the organisation's ability to recover from failure.
 
 Assess:
 
@@ -247,13 +252,13 @@ Assess:
 - Data recovery
 - Communication during recovery
 
-Recoverability should be considered independently of implementation success.
+Recoverability should be considered independently of implementation success. A successful change can still reveal poor recoverability for the *next* failure.
 
 ---
 
-## Phase 8 — Operational Validation
+### Phase 8 — Operational Validation
 
-Evaluate post-implementation verification.
+**Objective:** Confirm the change actually achieved its outcome.
 
 Assess:
 
@@ -264,24 +269,26 @@ Assess:
 - Business confirmation
 - Closure evidence
 
-Successful implementation should not be assumed solely because the Change record was closed.
+**Guidance:** Successful implementation should **not** be assumed solely because the Change record was closed. Look for validation evidence (tests passed, service metrics normal, business sign-off).
 
 ---
 
-## Phase 9 — Success Classification
+### Phase 9 — Success Classification
 
-Use the approved organisational classifications:
+**Objective:** Assign the evidence-based outcome.
+
+Approved classifications:
 
 - Successful
 - Partially Successful
 - Unsuccessful
 - Unconfirmed
 
-If evidence suggests a different outcome than the recorded classification, document this as a recommendation rather than altering the official classification.
+**Guidance:** If evidence suggests a different outcome than the recorded classification, document this as a recommendation rather than altering the official classification. The analysis records its own assessment; it does not rewrite the record.
 
 ---
 
-## Phase 10 — Related Record Assessment
+### Phase 10 — Related Record Assessment
 
 Where available, evaluate consistency with:
 
@@ -296,7 +303,24 @@ Confirm that:
 
 ---
 
-# Findings
+## Worked Example (Illustrative)
+
+**Change:** CHG001122 — "Deploy ordersvc v4.2 (remediation for INC0012345)."
+
+| Element | Evidence | Assessment |
+|---------|----------|------------|
+| Intent | 401B remediation | Linked to INC0012345; traceable. |
+| Risk | Recorded "Medium" | Underestimated — customer-facing, no tested rollback → finding. |
+| Planning | Plan present; rollback 1 line | Rollback asymmetry → risk. |
+| Execution | Deployed 02:30; incident began 02:40 | Causality supported (Moderate). |
+| Validation | Health checks passed post-fix | Successful outcome. |
+| Success class | Recorded "Successful" | Consistent with evidence. |
+
+**Conclusion:** Outcome successful but planning/risk/rollback weak. Confidence: **High** for outcome, **Moderate** for causality.
+
+---
+
+## Findings
 
 Identify:
 
@@ -312,7 +336,7 @@ Separate observations from conclusions.
 
 ---
 
-# Confidence Assessment
+## Confidence Assessment
 
 Assign a confidence rating to every significant finding using the OAS-000 Confidence Model (§10):
 
@@ -327,11 +351,11 @@ Confidence shall never be implied. Where evidence is limited or contradictory, r
 
 ---
 
-# Recommendations
+## Recommendations
 
 Recommendations should be evidence based and prioritised.
 
-Typical recommendation categories include:
+Typical categories:
 
 - Planning improvements
 - Testing improvements
@@ -342,9 +366,11 @@ Typical recommendation categories include:
 - Documentation improvements
 - Operational readiness
 
+**Example:** "Require a validated rollback for all customer-facing changes regardless of recorded risk (R1, High, based on CHG001122 asymmetry)."
+
 ---
 
-# Lessons Learned
+## Lessons Learned
 
 Capture lessons that improve future Changes.
 
@@ -359,14 +385,14 @@ Lessons should distinguish:
 
 ---
 
-# Quality Assurance Checklist
+## Quality Assurance Checklist
 
 Before completing the analysis verify:
 
 - [ ] Change intent established
 - [ ] Required evidence reviewed (and states classified)
 - [ ] Planning assessed
-- [ ] Risk evaluated
+- [ ] Risk evaluated (and appropriateness judged)
 - [ ] Change Type confirmed
 - [ ] Rollback symmetry evaluated
 - [ ] Recoverability assessed
@@ -379,7 +405,7 @@ Before completing the analysis verify:
 
 ---
 
-# AI Operating Standard
+## AI Operating Standard
 
 When analysing a Change:
 
@@ -399,7 +425,7 @@ The AI shall not infer successful implementation solely from record closure and 
 
 ---
 
-# Related Standards
+## Related Standards
 
 - OAS-000 Operational Analysis Standard Governance
 - OAS-101 Incident Analysis Methodology
@@ -408,29 +434,30 @@ The AI shall not infer successful implementation solely from record closure and 
 
 ---
 
-# Related Knowledge Base
+## Related Knowledge Base
 
 - OAS-KB-001 Operational Knowledge Templates (planned)
 - OAS-KB-002 Analysis Checklists (planned)
 
 ---
 
-# Revision History
+## Revision History
 
 | Version | Date | Summary | Author | Reviewer |
 |----------|------|---------|---------|----------|
 | 1.0 | 2026-07-23 | Initial approved release | | |
+| 1.1 | 2026-07-23 | Elaborated for comprehensiveness: definitions, per-phase guidance, risk/rollback/success examples, worked example | | |
 
 ---
 
-# Future Revision Register
+## Future Revision Register
 
 | ID | Status | Priority | Proposed Version | Enhancement |
 |----|--------|----------|------------------|-------------|
-| OAS401-001 | Proposed | Medium | 1.1 | Change Success Indicators Framework |
-| OAS401-002 | Proposed | Medium | 1.1 | CAB Decision Quality Assessment |
-| OAS401-003 | Proposed | Low | 1.2 | Implementation Maturity Model |
-| OAS401-004 | Proposed | Low | 1.2 | Change Metrics Guidance |
+| OAS401-001 | Proposed | Medium | 1.2 | Change Success Indicators Framework |
+| OAS401-002 | Proposed | Medium | 1.2 | CAB Decision Quality Assessment |
+| OAS401-003 | Proposed | Low | 2.0 | Implementation Maturity Model |
+| OAS401-004 | Proposed | Low | 2.0 | Change Metrics Guidance |
 
 ---
 

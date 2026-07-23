@@ -2,7 +2,7 @@
 document_id: OAS-201
 title: Major Incident Communications Methodology
 category: Analysis Methodology
-version: 1.0
+version: 1.1
 status: Approved
 owner: Operations
 classification: Internal
@@ -22,13 +22,21 @@ The Major Incident Communications Methodology establishes a structured, evidence
 
 The methodology assesses the effectiveness, timeliness, consistency, clarity, and governance of communications provided to operational teams, stakeholders, customers, and executives.
 
-This methodology evaluates **how the incident was communicated**, not how the technical incident was resolved.
+### What this methodology delivers
 
-Technical analysis remains within OAS-101 and OAS-301.
+- A reconstructed communication timeline.
+- An assessment of communication quality and timeliness.
+- A stakeholder-by-stakeholder evaluation.
+- An assessment of Major Incident Manager (MIM) handover continuity.
+- Evidence-based recommendations for communication improvement.
+
+### What it is not
+
+This methodology evaluates **how the incident was communicated**, not how the technical incident was resolved. Technical analysis remains within OAS-101 and OAS-301.
 
 ---
 
-# Scope
+## Scope
 
 This methodology applies to Major Incidents managed through ServiceNow or equivalent ITSM platforms.
 
@@ -44,7 +52,20 @@ It evaluates communications generated throughout the Major Incident lifecycle in
 
 ---
 
-# Guiding Principles
+## Definitions
+
+| Term | Definition |
+|------|------------|
+| MIM | Major Incident Manager — owns coordination and comms during a major incident. |
+| SITREP | Situation Report — periodic status update. |
+| Bridge | Coordinated voice/video conference for real-time coordination. |
+| Stakeholder group | A distinct audience with different information needs (ops, exec, customer, vendor). |
+| Handover | Transfer of MIM role between individuals. |
+| Cadence | The agreed frequency of updates. |
+
+---
+
+## Guiding Principles
 
 Major Incident communications shall:
 
@@ -57,15 +78,13 @@ Major Incident communications shall:
 
 ---
 
-# Inputs
+## Inputs
 
-## Mandatory
+### Mandatory
 
 - Major Incident XML
 
----
-
-## Optional Supporting Evidence
+### Optional Supporting Evidence
 
 - Situation Reports (SITREPs)
 - Executive Updates (.eml)
@@ -80,7 +99,7 @@ Where timeline documentation is unavailable, the Major Incident XML shall be use
 
 ---
 
-# Required Evidence
+## Required Evidence
 
 Review available evidence including:
 
@@ -99,9 +118,11 @@ Every evidence source listed above shall be classified using the Evidence States
 
 ---
 
-# Analysis Methodology
+## Analysis Methodology
 
-## Phase 1 — Context
+### Phase 1 — Context
+
+**Objective:** Understand the communication problem space before assessing messages.
 
 Establish:
 
@@ -111,11 +132,13 @@ Establish:
 - Stakeholder groups
 - Communication objectives
 
+**Guidance:** Different audiences need different messages. A clear statement of objectives (e.g., "keep executives informed of customer impact and ETR; keep customers informed of workaround") frames the rest of the assessment.
+
 ---
 
-## Phase 2 — Communication Timeline
+### Phase 2 — Communication Timeline
 
-Construct the communication timeline.
+**Objective:** Construct the communication timeline.
 
 Assess:
 
@@ -127,26 +150,32 @@ Assess:
 - Resolution notification
 - Closure communication
 
-Timeline reconstruction shall use all available evidence.
+**Guidance:** Timeline reconstruction shall use all available evidence. Note gaps (e.g., "no customer update between 03:00 and 07:00 despite ongoing impact").
+
+**Common pitfall:** Assessing message *quality* without first establishing *whether messages were sent at all*.
 
 ---
 
-## Phase 3 — Communication Quality
+### Phase 3 — Communication Quality
+
+**Objective:** Judge whether each message was fit for purpose.
 
 Assess:
 
-- Accuracy
-- Clarity
-- Consistency
-- Relevance
-- Audience suitability
-- Actionability
+- Accuracy (did it reflect the evidence at the time?)
+- Clarity (was it unambiguous?)
+- Consistency (did later messages contradict earlier ones?)
+- Relevance (was it the right content for the audience?)
+- Audience suitability (right level of detail/abstraction?)
+- Actionability (did it tell recipients what to do?)
 
-Distinguish confirmed information from assumptions.
+**Guidance:** Distinguish confirmed information from assumptions. A message stating "root cause identified as DNS" before confirmation is a quality defect even if later proven correct.
 
 ---
 
-## Phase 4 — Timeliness
+### Phase 4 — Timeliness
+
+**Objective:** Determine whether communications supported awareness in time.
 
 Evaluate:
 
@@ -156,56 +185,35 @@ Evaluate:
 - Customer notification timing
 - Resolution communication timing
 
-Assess whether communications supported effective operational awareness.
+**Guidance:** Assess against the incident's actual impact, not a generic SLA. A 30-minute delay is minor for a low-impact event but critical for a customer-facing outage.
 
 ---
 
-## Phase 5 — Stakeholder Communications
+### Phase 5 — Stakeholder Communications
 
-Evaluate communications provided to:
+Evaluate communications provided to each group.
 
-### Operational Teams
+#### Operational Teams
 
-Assess:
+Assess technical clarity, actionability, coordination, and escalation effectiveness. Operational messages should enable doing the work.
 
-- Technical clarity
-- Actionability
-- Coordination
-- Escalation effectiveness
+#### Executives
 
-### Executives
+Assess business impact, risk communication, decision support, clarity, and appropriate technical abstraction. Executives need impact and ETR, not packet traces.
 
-Assess:
+#### Customers
 
-- Business impact
-- Risk communication
-- Decision support
-- Clarity
-- Appropriate technical abstraction
+Assess transparency, clarity, timeliness, and expectation management. Customer messages should set accurate expectations and provide workarounds.
 
-### Customers
+#### Vendors
 
-Assess:
-
-- Transparency
-- Clarity
-- Timeliness
-- Expectation management
-
-### Vendors
-
-Where vendor communications are available evaluate:
-
-- Escalation effectiveness
-- Information exchange
-- Coordination
-- Follow-up
+Where vendor communications are available, evaluate escalation effectiveness, information exchange, coordination, and follow-up.
 
 ---
 
-## Phase 6 — Major Incident Manager (MIM) Handovers
+### Phase 6 — Major Incident Manager (MIM) Handovers
 
-Where MIM handovers occurred, evaluate only the effectiveness of operational continuity.
+**Objective:** Evaluate only the effectiveness of operational continuity across handovers.
 
 Assess:
 
@@ -214,15 +222,13 @@ Assess:
 - Preservation of key decisions
 - Continuity of communication cadence
 
-Do not assess individual MIM performance.
-
-Actions performed by successive MIMs should be evaluated through subsequent communications and work notes rather than the handover event itself.
+**Guidance:** Do **not** assess individual MIM performance. Actions performed by successive MIMs should be evaluated through subsequent communications and work notes rather than the handover event itself. The question is "did the handover preserve continuity?", not "was MIM A better than MIM B?".
 
 ---
 
-## Phase 7 — Communication Governance
+### Phase 7 — Communication Governance
 
-Assess whether communications demonstrated appropriate governance.
+**Objective:** Confirm communications demonstrated appropriate governance.
 
 Examples include:
 
@@ -234,9 +240,9 @@ Examples include:
 
 ---
 
-## Phase 8 — Communication Effectiveness
+### Phase 8 — Communication Effectiveness
 
-Evaluate overall effectiveness.
+**Objective:** Form an overall judgement.
 
 Consider:
 
@@ -248,7 +254,22 @@ Consider:
 
 ---
 
-# Findings
+## Worked Example (Illustrative)
+
+**Major Incident:** MI000456 — "Payment gateway degradation."
+
+| Stakeholder | Evidence | Assessment |
+|-------------|----------|------------|
+| Operational | Bridge every 30 min; clear action items | Strong. |
+| Executive | SITREP at 03:00, 05:00, 07:00 | Adequate cadence. |
+| Customer | Initial notification 03:10; next at 06:45 | Gap of 3h35m during active impact — weakness. |
+| Vendor | Escalation at 03:20; daily RCA promised | Effective. |
+
+**Conclusion:** Operationally and executively well communicated; customer cadence was insufficient given impact. Confidence: **High**.
+
+---
+
+## Findings
 
 Identify:
 
@@ -262,7 +283,7 @@ Separate observations from conclusions.
 
 ---
 
-# Confidence Assessment
+## Confidence Assessment
 
 Assign a confidence rating to every significant finding using the OAS-000 Confidence Model (§10):
 
@@ -277,7 +298,7 @@ Confidence shall never be implied. Where communication evidence is limited or co
 
 ---
 
-# Recommendations
+## Recommendations
 
 Recommendations shall be evidence based.
 
@@ -291,9 +312,11 @@ Typical categories include:
 - Timeline management
 - Documentation improvements
 
+**Example:** "Define a maximum customer-comms silence window of 60 minutes during active SEV-1 incidents (R1, High, based on MI000456 customer cadence gap)."
+
 ---
 
-# Lessons for Communication
+## Lessons for Communication
 
 Capture lessons that improve future Major Incident communications.
 
@@ -312,7 +335,7 @@ Lessons shall be specific, actionable, and supported by evidence.
 
 ---
 
-# Quality Assurance Checklist
+## Quality Assurance Checklist
 
 Before completing the analysis verify:
 
@@ -322,7 +345,7 @@ Before completing the analysis verify:
 - [ ] Communication quality assessed
 - [ ] Timeliness evaluated
 - [ ] Stakeholder communications assessed
-- [ ] MIM handovers reviewed where applicable
+- [ ] MIM handovers reviewed where applicable (continuity only)
 - [ ] Governance evaluated
 - [ ] Findings evidence based
 - [ ] Confidence assigned to findings
@@ -331,7 +354,7 @@ Before completing the analysis verify:
 
 ---
 
-# AI Operating Standard
+## AI Operating Standard
 
 When analysing Major Incident communications:
 
@@ -351,7 +374,7 @@ The AI shall distinguish factual communications from inferred intent and explici
 
 ---
 
-# Related Standards
+## Related Standards
 
 - OAS-000 Operational Analysis Standard Governance
 - OAS-101 Incident Analysis Methodology
@@ -360,29 +383,30 @@ The AI shall distinguish factual communications from inferred intent and explici
 
 ---
 
-# Related Knowledge Base
+## Related Knowledge Base
 
 - OAS-KB-001 Operational Knowledge Templates (planned)
 - OAS-KB-002 Analysis Checklists (planned)
 
 ---
 
-# Revision History
+## Revision History
 
 | Version | Date | Summary | Author | Reviewer |
 |----------|------|---------|---------|----------|
 | 1.0 | 2026-07-23 | Initial approved release | | |
+| 1.1 | 2026-07-23 | Elaborated for comprehensiveness: definitions, per-phase guidance, stakeholder frameworks, worked example, recommendation example | | |
 
 ---
 
-# Future Revision Register
+## Future Revision Register
 
 | ID | Status | Priority | Proposed Version | Enhancement |
 |----|--------|----------|------------------|-------------|
-| OAS201-001 | Proposed | Medium | 1.1 | Communication Effectiveness Indicators |
-| OAS201-002 | Proposed | Medium | 1.1 | Stakeholder Communication Matrix |
-| OAS201-003 | Proposed | Low | 1.2 | Executive Communication Guidance |
-| OAS201-004 | Proposed | Low | 1.2 | Communication Timeline Visualisation Standard |
+| OAS201-001 | Proposed | Medium | 1.2 | Communication Effectiveness Indicators |
+| OAS201-002 | Proposed | Medium | 1.2 | Stakeholder Communication Matrix |
+| OAS201-003 | Proposed | Low | 2.0 | Executive Communication Guidance |
+| OAS201-004 | Proposed | Low | 2.0 | Communication Timeline Visualisation Standard |
 
 ---
 

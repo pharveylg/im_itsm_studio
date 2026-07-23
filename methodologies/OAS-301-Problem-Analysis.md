@@ -2,7 +2,7 @@
 document_id: OAS-301
 title: Problem Analysis Methodology
 category: Analysis Methodology
-version: 1.0
+version: 1.1
 status: Approved
 owner: Operations
 classification: Internal
@@ -21,7 +21,7 @@ review_cycle: Annual
 
 This standard defines the methodology for analysing Problem investigations.
 
-The purpose of OAS-301 is to evaluate the quality, completeness, and evidential strength of a Problem investigation rather than simply reviewing the Problem record.
+The purpose of OAS-301 is to evaluate the **quality, completeness, and evidential strength** of a Problem investigation rather than simply reviewing the Problem record.
 
 OAS-301 provides an evidence-based framework for assessing:
 
@@ -34,6 +34,18 @@ OAS-301 provides an evidence-based framework for assessing:
 - Investigation completeness
 
 This methodology inherits all governance requirements defined in **OAS-000 Operational Analysis Standard**.
+
+### What this methodology delivers
+
+- A judgement on whether the investigation was rigorous.
+- A rating of how well the stated Root Cause is supported by evidence.
+- An assessment of Known Error, Corrective, and Preventive Actions.
+- A residual risk-of-recurrence statement.
+- Evidence-based recommendations to improve the investigation and the operation.
+
+### What it is not
+
+It is not a substitute for performing the investigation. It assesses an investigation that has (or has not) been done.
 
 ---
 
@@ -57,7 +69,7 @@ and provides investigation context for:
 - OAS-401 Change Analysis
 - OAS-501 Operational Knowledge Standard
 
-Where Post Incident/Implementation Review (PIR) artefacts exist, they may be used as supporting evidence but are not a standalone OAS standard in Release 1.0.
+Where Post Incident/Implementation Review (PIR) artefacts exist, they may be used as supporting evidence but are not a standalone OAS standard in Release 1.1.
 
 ---
 
@@ -65,9 +77,9 @@ Where Post Incident/Implementation Review (PIR) artefacts exist, they may be use
 
 OAS-301 evaluates the investigation.
 
-It does not assume that documented conclusions are correct.
+It does **not** assume that documented conclusions are correct.
 
-The Problem record is treated as evidence.
+The Problem record is treated as **evidence**, not as authority.
 
 Conclusions shall be assessed against all available evidence.
 
@@ -86,7 +98,7 @@ Every Problem analysis shall:
 
 ### Burden of Proof Principle
 
-Conclusions documented within a Problem investigation are not accepted solely because they are recorded.
+Conclusions documented within a Problem investigation are **not** accepted solely because they are recorded.
 
 Each significant conclusion shall be evaluated against the available evidence.
 
@@ -99,6 +111,20 @@ Where evidence is insufficient, contradictory, or unavailable, the analysis shal
 - Impact on the investigation
 
 The objective of OAS-301 is to evaluate both the quality of the investigation and the strength of its conclusions.
+
+---
+
+## Definitions
+
+| Term | Definition |
+|------|------------|
+| Root Cause | The underlying reason the problem occurred. |
+| Known Error | A documented fault with a known root cause and workaround. |
+| Corrective Action | Action to remove the cause (People/Process/Technology). |
+| Preventive Action | Action to stop recurrence of this or similar problems. |
+| CAPA | Corrective and Preventive Action plan. |
+| SIR | Service Improvement Review — governance review of the problem. |
+| Recurrence Risk | Likelihood the fault returns given current state. |
 
 ---
 
@@ -221,7 +247,7 @@ For each evidence source evaluate:
 - Reliability
 - Contribution to the investigation
 
-Evidence shall be assessed without assuming authority based on source.
+**Guidance:** Evidence shall be assessed without assuming authority based on source. A vendor RCA (tier 3) is useful but commercially interested; an internal log (tier 4) may be more neutral.
 
 ---
 
@@ -229,15 +255,15 @@ Evidence shall be assessed without assuming authority based on source.
 
 Evaluate the investigation itself.
 
-Assessment areas include:
+Assessment areas:
 
-- Scope
-- Investigation planning
-- SME engagement
-- Technical analysis
-- Vendor engagement
-- Supporting documentation
-- Investigation traceability
+- Scope (was the right problem scoped?)
+- Investigation planning (was there a plan?)
+- SME engagement (were the right experts involved?)
+- Technical analysis (was it rigorous?)
+- Vendor engagement (was the vendor used well?)
+- Supporting documentation (was it recorded?)
+- Investigation traceability (can each step be followed?)
 
 Determine whether the investigation has been conducted with sufficient rigour.
 
@@ -249,10 +275,10 @@ Evaluate the stated Root Cause.
 
 Determine whether it is:
 
-- Supported
-- Partially Supported
-- Not Supported
-- Unable to Determine
+- **Supported** — multiple independent sources agree.
+- **Partially Supported** — one source agrees; others silent or weak.
+- **Not Supported** — evidence contradicts or is absent.
+- **Unable to Determine** — insufficient evidence.
 
 Document:
 
@@ -260,6 +286,10 @@ Document:
 - Contradictory evidence
 - Evidence limitations
 - Confidence
+
+**Example — Supported:** Root cause "connection pool exhaustion" backed by app logs (pool saturation), APM (thread contention), and a confirmed config change removing the limit. → **Supported, High confidence.**
+
+**Example — Not Supported:** Root cause "DNS" stated in the Problem record, but no DNS log, no vendor statement, and the incident timeline shows the fault began before any DNS event. → **Not Supported, Low/Unknown.**
 
 ---
 
@@ -274,6 +304,8 @@ Assess:
 - Is the operational impact understood?
 - Is future reuse likely?
 
+A Known Error is only valuable if someone encountering the symptom can find it and apply the workaround.
+
 ---
 
 ### Phase 6 — Corrective Action Assessment
@@ -281,8 +313,6 @@ Assess:
 Corrective Actions shall be evaluated across three domains.
 
 #### People
-
-Evaluate:
 
 - Skills
 - Competencies
@@ -293,8 +323,6 @@ Evaluate:
 
 #### Process
 
-Evaluate:
-
 - Governance
 - Procedures
 - Operational controls
@@ -303,8 +331,6 @@ Evaluate:
 - Compliance
 
 #### Technology
-
-Evaluate:
 
 - Infrastructure
 - Applications
@@ -316,10 +342,10 @@ Evaluate:
 
 For every Corrective Action assess:
 
-- Relevance
-- Ownership
-- Feasibility
-- Traceability
+- Relevance (does it address the cause?)
+- Ownership (is someone accountable?)
+- Feasibility (can it be done?)
+- Traceability (does it link to the root cause?)
 - Expected effectiveness
 
 ---
@@ -336,6 +362,8 @@ Assess:
 - Governance
 - Sustainability
 - Operational effectiveness
+
+Preventive actions should reduce the chance of *this or similar* problems, not merely fix the one instance.
 
 ---
 
@@ -408,14 +436,7 @@ Evaluate the investigation independently from technical conclusions.
 | Governance | |
 | Traceability | |
 
-Overall Rating:
-
-- Excellent
-- Good
-- Adequate
-- Poor
-
-Provide supporting rationale.
+Overall Rating: Excellent / Good / Adequate / Poor. Provide supporting rationale.
 
 ---
 
@@ -453,6 +474,22 @@ Consider:
 - Operational risks
 
 Document residual risk and rationale.
+
+---
+
+## Worked Example (Illustrative)
+
+**Problem:** PRB000789 — "Intermittent checkout 500 errors."
+
+| Element | Evidence | Assessment |
+|---------|----------|------------|
+| Root Cause (stated) | "Bad deployment CHG001122" | Supported by deploy timestamp + error onset; **High**. |
+| Known Error | Documented with workaround | Adequate; **Moderate** (workaround untested). |
+| Corrective | Rollback CHG001122 + config fix | Relevant, owned, traceable; **High**. |
+| Preventive | Add pre-deploy validation gate | Addresses recurrence; **Moderate** (not yet implemented). |
+| Recurrence Risk | If gate not implemented | **Medium** residual. |
+
+**Conclusion:** Investigation well conducted; corrective actions strong; preventive action and Known Error validation are the gaps. Overall confidence **High** for cause, **Moderate** for completeness.
 
 ---
 
@@ -566,6 +603,7 @@ Explicitly document uncertainty where evidence is incomplete.
 | Version | Date | Summary | Author | Reviewer |
 |----------|------|---------|---------|----------|
 | 1.0 | 2026-07-23 | Initial approved release (restructured to Standard Document Structure; cross-references corrected) | | |
+| 1.1 | 2026-07-23 | Elaborated for comprehensiveness: definitions, per-phase assessment guidance, Supported/Not-Supported examples, P/P/T action evaluation, worked example | | |
 
 ---
 
@@ -573,9 +611,9 @@ Explicitly document uncertainty where evidence is incomplete.
 
 | ID | Status | Priority | Proposed Version | Enhancement |
 |----|--------|----------|------------------|-------------|
-| OAS301-001 | Proposed | Medium | 1.1 | Investigation Evidence Traceability Matrix (map conclusions to supporting evidence) |
-| OAS301-002 | Proposed | Low | 1.1 | Standardised Root Cause Confidence Templates |
-| OAS301-003 | Proposed | Low | 1.2 | PIR Integration Guidance (when OAS-601 is authorised) |
+| OAS301-001 | Proposed | Medium | 1.2 | Investigation Evidence Traceability Matrix (map conclusions to supporting evidence) |
+| OAS301-002 | Proposed | Low | 1.2 | Standardised Root Cause Confidence Templates |
+| OAS301-003 | Proposed | Low | 2.0 | PIR Integration Guidance (when OAS-601 is authorised) |
 
 ---
 
