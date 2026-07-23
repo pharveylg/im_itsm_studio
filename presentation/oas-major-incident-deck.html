@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OAS — Major Incident Analysis in Context</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme">
+<style>
+  :root { --oas-blue:#2563eb; --oas-purple:#7c3aed; --oas-green:#10b981; }
+  .reveal { font-family: "Segoe UI", system-ui, Arial, sans-serif; }
+  .reveal h1 { color:#fff; font-size:2.0em; }
+  .reveal h2 { color:#93c5fd; font-size:1.4em; }
+  .reveal h3 { color:#c4b5fd; font-size:1.0em; }
+  .reveal .brand { position:fixed; top:12px; left:18px; font-weight:700; color:#93c5fd; z-index:40; font-size:14px; letter-spacing:1px; }
+  .reveal .footer { position:fixed; bottom:10px; right:18px; font-size:11px; color:#64748b; z-index:40; }
+  .reveal section img { max-width:78%; border-radius:10px; border:1px solid #334155; background:#fff; }
+  .reveal .mermaid svg { max-width:100%; height:auto; }
+  .reveal ul, .reveal ol { display:block; margin-left:1.1em; }
+  .reveal li { margin:0.25em 0; }
+  .reveal .card { background:rgba(255,255,255,0.05); border-left:4px solid var(--oas-blue); padding:12px 18px; border-radius:6px; margin:12px 0; text-align:left; }
+  .reveal .card.p { border-left-color:var(--oas-purple); }
+  .reveal .card.g { border-left-color:var(--oas-green); }
+  .reveal table { border-collapse:collapse; font-size:0.62em; margin:0 auto; }
+  .reveal th, .reveal td { border:1px solid #334155; padding:7px 12px; text-align:left; }
+  .reveal th { background:rgba(37,99,235,0.18); color:#bfdbfe; }
+  .reveal .tag { display:inline-block; background:rgba(37,99,235,0.18); color:#bfdbfe; border-radius:4px; padding:2px 8px; font-size:0.6em; margin:2px; }
+  .reveal .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; text-align:left; }
+  .reveal .lead { color:#e2e8f0; font-size:0.8em; }
+</style>
+</head>
+<body>
+<div class="brand">OAS · Operational Analysis Standard</div>
+<div class="footer">Major Incident Showcase · Release 1.2.1</div>
+<div class="reveal">
+<div class="slides">
+
+<!-- 1. Title -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h1>Operational Analysis Standard</h1>
+  <h3>Major Incident Analysis in Context</h3>
+  <p class="lead">How <b>OAS-201 Major Incident Communications</b> connects to every other standard</p>
+  <div style="margin-top:24px">
+    <span class="tag">Release 1.2.1</span>
+    <span class="tag">ITIL 4-aligned</span>
+    <span class="tag">ServiceNow reference</span>
+    <span class="tag">Evidence-based</span>
+  </div>
+</section>
+
+<!-- 2. What is OAS -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>What is OAS? (through the Major Incident lens)</h2>
+  <div class="grid2">
+    <div>
+      <div class="card">A governed library of <b>evidence-based analysis standards</b> for operational records.</div>
+      <div class="card p">It <b>complements</b> ITIL &amp; ServiceNow — it does not replace them.</div>
+      <div class="card g">Every standard inherits <b>OAS-000</b> and the evidence-first principle.</div>
+    </div>
+    <div>
+      <p class="lead">Today's focus:</p>
+      <div class="card"><b>OAS-201 — Major Incident Communications</b><br>evaluates <i>how</i> an incident was communicated — not the technical fix.</div>
+      <p class="lead">…and how it connects to OAS-000, 101, 301, 401, 501 and the Knowledge Base.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Library at a glance -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>The OAS Library at a glance</h2>
+  <img src="../assets/diagrams/oas-architecture.svg" alt="OAS Framework Architecture">
+  <p class="lead">6 standards + a derived Knowledge Base (KB-001 … KB-006). OAS-000 governs all.</p>
+</section>
+
+<!-- 4. Where Major Incident lives -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>Where Major Incident lives</h2>
+  <div class="mermaid">
+graph LR
+  INC[Incident] --> MI[Major Incident]
+  MI --> CHG[Remediation Change]
+  MI --> PRB[Problem]
+  MI --> KA[Knowledge]
+  </div>
+  <p class="lead">A Major Incident is declared from an Incident, frequently drives a Problem and remediation Changes, and generates knowledge.</p>
+</section>
+
+<!-- 5. OAS-201 focus -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>OAS-201 — Major Incident Communications (the focus)</h2>
+  <div class="grid2">
+    <div>
+      <div class="card"><b>Purpose:</b> evaluate effectiveness, timeliness, consistency, clarity &amp; governance of communications.</div>
+      <div class="card"><b>Scope:</b> operational updates, executive, customer, vendor, bridge, MIM handovers.</div>
+    </div>
+    <div>
+      <div class="card p"><b>Does:</b> assess <i>how</i> the incident was communicated.</div>
+      <div class="card g"><b>Does not:</b> re-do technical root-cause (OAS-301) or incident response (OAS-101).</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. OAS-201 phases -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>OAS-201 — 8-phase methodology</h2>
+  <div class="mermaid">
+flowchart TD
+  A[1 Context] --> B[2 Comms Timeline]
+  B --> C[3 Quality]
+  C --> D[4 Timeliness]
+  D --> E[5 Stakeholders]
+  E --> F[6 MIM Handovers]
+  F --> G[7 Governance]
+  G --> H[8 Effectiveness]
+  </div>
+</section>
+
+<!-- 7. Relationship map -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>Relationship map — Major Incident at the centre</h2>
+  <div class="mermaid">
+graph TD
+  MI[OAS-201 Major Incident Comms] --> G[OAS-000 Governance]
+  MI --> I[OAS-101 Incident]
+  MI --> P[OAS-301 Problem]
+  MI --> C[OAS-401 Change]
+  MI --> K[OAS-501 Knowledge]
+  MI --> KB[Knowledge Base KB-001..006]
+  G -.governs.-> MI
+  </div>
+</section>
+
+<!-- 8. -> OAS-000 -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>↔ OAS-000 — Governance (the foundation)</h2>
+  <div class="grid2">
+    <div>
+      <div class="card"><b>Inherits:</b> Evidence First · Objectivity · Traceability · Transparency · Fact/Opinion separation.</div>
+      <div class="card"><b>Uses:</b> Evidence Hierarchy (7 tiers), Evidence States, Evidence Classification, Confidence Model (H/M/L/U).</div>
+    </div>
+    <div>
+      <div class="card p"><b>Lifecycle:</b> Collect → Inventory → Classify → Analyse → Correlate → Timeline → Gaps → Confidence → Assess → Summarise.</div>
+      <div class="card g"><b>Rule:</b> no methodology may contradict OAS-000.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. -> OAS-101 -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>↔ OAS-101 — Incident Analysis</h2>
+  <table>
+    <tr><th>Dimension</th><th>OAS-101 (Incident)</th><th>OAS-201 (Major Incident Comms)</th></tr>
+    <tr><td>Question</td><td>What happened &amp; how was it handled?</td><td>How was it communicated?</td></tr>
+    <tr><td>Output feeds</td><td>Operational facts, timeline, response</td><td>Stakeholder narrative &amp; cadence</td></tr>
+    <tr><td>Link</td><td>Primary record</td><td>Assesses comms about the same event</td></tr>
+  </table>
+  <div class="card" style="margin-top:14px">OAS-101 establishes the <b>facts</b>; OAS-201 assesses how those facts were <b>communicated</b>. Their Related-Record assessment cross-links them.</div>
+</section>
+
+<!-- 10. -> OAS-301 -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>↔ OAS-301 — Problem Analysis</h2>
+  <div class="grid2">
+    <div>
+      <div class="card">A Major Incident often spawns a <b>Problem (PRB)</b>.</div>
+      <div class="card p">OAS-201's SITREPs &amp; narrative feed OAS-301's <b>investigation context</b>.</div>
+    </div>
+    <div>
+      <div class="card">OAS-301 validates <b>root cause</b>; OAS-201 confirms stakeholders were <b>informed during</b>.</div>
+      <div class="card g">A <b>Post Incident Review (PIR)</b> ties both together.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. -> OAS-401 -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>↔ OAS-401 — Change Analysis</h2>
+  <div class="card">Remediation Changes (<b>401B</b>) frequently follow a Major Incident.</div>
+  <div class="grid2">
+    <div>
+      <div class="card p"><b>OAS-401</b> assesses planning, risk, rollback symmetry &amp; validation.</div>
+    </div>
+    <div>
+      <div class="card g"><b>OAS-201</b> assesses comms during/after the change.</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:10px"><b>Consistency check:</b> did communications reflect the change's <i>actual</i> outcome (not just its closure)?</div>
+</section>
+
+<!-- 12. -> OAS-501 -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>↔ OAS-501 — Operational Knowledge</h2>
+  <div class="mermaid">
+graph LR
+  MI[Major Incident Lessons] --> KA[Knowledge Article]
+  MI --> RB[Runbook]
+  MI --> KE[Known Error Article]
+  KA --> O5[OAS-501 governs quality + lifecycle]
+  </div>
+  <p class="lead">Major Incident lessons become Knowledge Articles, Runbooks &amp; Known Error Articles — governed for quality by OAS-501. Closed loop: analysis → knowledge → better future response.</p>
+</section>
+
+<!-- 13. -> Knowledge Base -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>↔ Knowledge Base (KB-001 … KB-006)</h2>
+  <div class="mermaid">
+graph TD
+  O5[OAS-501] --> K1[KB-001 Templates]
+  O0[OAS-000] --> K2[KB-002 Checklists]
+  O2[OAS-201] --> K2
+  O0 --> K3[KB-003 Reports]
+  O2 --> K4[KB-004 Examples]
+  O0 --> K5[KB-005 References]
+  O0 --> K6[KB-006 Prompts]
+  O2 --> K6
+  </div>
+  <p class="lead">OAS-201 contributes: comms runbook templates (KB-001), its QA checklist (KB-002), report templates (KB-003), worked examples (KB-004) &amp; AI prompts (KB-006).</p>
+</section>
+
+<!-- 14. Evidence & Confidence -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>Evidence &amp; Confidence in MI communications</h2>
+  <div class="grid2">
+    <div>
+      <div class="card"><b>Hierarchy:</b> Primary MI record &gt; related &gt; vendor &gt; monitoring &gt; email &gt; user &gt; analyst notes.</div>
+      <div class="card"><b>States:</b> classify every comms artefact — Present / Referenced / Missing / Not Applicable.</div>
+    </div>
+    <div>
+      <div class="card p"><b>Confidence:</b> rate every comms finding — High / Moderate / Low / Unknown.</div>
+      <div class="card g"><b>AI guardrails (OAS-000 §14):</b> no invented evidence, no concealed uncertainty, human validation mandatory.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 15. Worked example -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>Worked example — MI000456 (Payment gateway)</h2>
+  <table>
+    <tr><th>Stakeholder</th><th>Evidence</th><th>Assessment</th></tr>
+    <tr><td>Operational</td><td>Bridge every 30 min</td><td>Strong</td></tr>
+    <tr><td>Executive</td><td>SITREP 03:00 / 05:00 / 07:00</td><td>Adequate cadence</td></tr>
+    <tr><td>Customer</td><td>Update 03:10 → next 06:45</td><td>3h35m gap during impact — weakness</td></tr>
+    <tr><td>Vendor</td><td>Escalation 03:20</td><td>Effective</td></tr>
+  </table>
+  <div class="card" style="margin-top:12px"><b>Lesson:</b> define a max customer-comms silence window during active SEV-1. <b>Confidence: High.</b></div>
+</section>
+
+<!-- 16. Quick start -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>Analyst quick start — Major Incident</h2>
+  <ol>
+    <li>Open <b>OAS-201</b>; read <b>OAS-000</b> first if new.</li>
+    <li>Build an <b>Evidence Manifest</b>; classify every comms artefact.</li>
+    <li>Reconstruct the <b>communication timeline</b>.</li>
+    <li>Assess <b>quality &amp; timeliness</b> per stakeholder.</li>
+    <li>Evaluate <b>MIM handover continuity</b> only.</li>
+    <li>Assign <b>confidence</b> to each finding.</li>
+    <li>Complete the <b>QA checklist</b> (KB-002).</li>
+    <li>Capture <b>Lessons for Communication</b>; feed OAS-501 / KB.</li>
+  </ol>
+</section>
+
+<!-- 17. Takeaways -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>Key takeaways</h2>
+  <div class="grid2">
+    <div>
+      <div class="card">OAS-201 is the <b>communications lens</b> inside a connected ecosystem.</div>
+      <div class="card p">All standards inherit OAS-000; none contradict.</div>
+    </div>
+    <div>
+      <div class="card">The Knowledge Base is <b>derived</b> from the standards.</div>
+      <div class="card g">Everything is <b>evidence-first, confidence-rated, traceable</b>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 18. References -->
+<section data-background-gradient="linear-gradient(135deg,#0f172a,#1e293b)">
+  <h2>References &amp; closing</h2>
+  <p class="lead" style="text-align:left">
+    <b>Standards:</b> OAS-000 Governance · OAS-101 Incident · OAS-201 Major Incident Comms · OAS-301 Problem · OAS-401 Change · OAS-501 Knowledge.<br>
+    <b>Knowledge Base:</b> KB-001 Templates · KB-002 Checklists · KB-003 Reports · KB-004 Examples · KB-005 References · KB-006 Prompts.<br>
+    <b>Release:</b> 1.2.1 &nbsp;·&nbsp; <b>Alignment:</b> ITIL 4 &nbsp;·&nbsp; <b>Reference platform:</b> ServiceNow.
+  </p>
+  <p style="margin-top:18px"><span class="tag">Evidence over opinion</span> <span class="tag">Governance before methodology</span> <span class="tag">Platform-agnostic, ServiceNow by reference</span></p>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    transition: 'slide',
+    plugins: [ RevealNotes ]
+  });
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+  window.addEventListener('load', function () { mermaid.run(); });
+</script>
+</body>
+</html>

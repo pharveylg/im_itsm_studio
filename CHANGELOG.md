@@ -4,6 +4,18 @@ All notable changes to the OAS library are recorded here. The library as a whole
 semantic versioning: *Major* = breaking methodological change, *Minor* = new capability,
 *Patch* = editorial correction.
 
+## [1.2.2] — 2026-07-23
+
+### Added
+- Presentation deck: `presentation/oas-major-incident-deck.html` — a reveal.js + Mermaid
+  slide deck showcasing all OAS standards through the Major Incident (OAS-201) lens and its
+  relationships to OAS-000, OAS-101, OAS-301, OAS-401, OAS-501, and the Knowledge Base.
+
+### Changed
+- Bumped library release to 1.2.2 (supplementary asset; no standards change).
+
+---
+
 ## [1.2.1] — 2026-07-23
 
 ### Added

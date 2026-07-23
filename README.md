@@ -116,6 +116,7 @@ oas/
 │   ├── diagrams/
 │   └── logos/
 │
+├── presentation/                         # Slide deck (Major Incident showcase)
 └── style-guide/                           # Documentation style (DRAFT)
     ├── Documentation-Style-Guide.md
     └── Markdown-Conventions.md
@@ -129,7 +130,7 @@ asset once it is published.
 
 ## Release Version
 
-- **Current release:** `1.2.1`
+- **Current release:** `1.2.2`
 - **Release date:** 2026-07-23
 - **Status:** Approved (editorial review complete)
 - **Scope:** Six standards — OAS-000, OAS-101, OAS-201, OAS-301, OAS-401, OAS-501 — plus
@@ -141,6 +142,8 @@ asset once it is published.
   standards.
 - **1.2.1 change:** Added relationship visuals — 16 Mermaid diagrams across the standards
   and Knowledge Base, plus a static SVG architecture export in `assets/diagrams/`.
+- **1.2.2 change:** Added a presentation deck (`presentation/oas-major-incident-deck.html`)
+  showcasing all standards through the Major Incident (OAS-201) lens.
 - **Not yet included:** Ratified style guides (`style-guide/` remains DRAFT seeds).
 
 See `CHANGELOG.md` for the full release history.
