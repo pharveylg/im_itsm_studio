@@ -436,8 +436,8 @@ The AI shall not infer successful implementation solely from record closure and 
 
 ## Related Knowledge Base
 
-- OAS-KB-001 Operational Knowledge Templates (planned)
-- OAS-KB-002 Analysis Checklists (planned)
+- OAS-KB-001 Operational Knowledge Templates
+- OAS-KB-002 Analysis Checklists
 
 ---
 

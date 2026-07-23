@@ -4,6 +4,23 @@ All notable changes to the OAS library are recorded here. The library as a whole
 semantic versioning: *Major* = breaking methodological change, *Minor* = new capability,
 *Patch* = editorial correction.
 
+## [1.2.0] — 2026-07-23
+
+### Added
+- Authored the Knowledge Base (OAS-KB-001 … OAS-KB-006), derived from the frozen standards:
+  - OAS-KB-001 Operational Knowledge Templates (from OAS-501)
+  - OAS-KB-002 Analysis Checklists (from OAS-000/101/201/301/401 QA checklists)
+  - OAS-KB-003 Report Templates (from OAS-000 §16 outputs)
+  - OAS-KB-004 Operational Examples (full worked Incident/Problem/Change analyses)
+  - OAS-KB-005 Reference Guides (evidence hierarchy, confidence, normative language, ServiceNow mapping, glossary)
+  - OAS-KB-006 Prompt Library (AI-assisted analysis prompts aligned to OAS-000 §14)
+- Updated standards' "(planned)" Knowledge Base references to reflect availability.
+
+### Changed
+- Bumped library release to 1.2.0 (Knowledge Base is a new library capability; standards remain at 1.1).
+
+---
+
 ## [1.1.0] — 2026-07-23
 
 ### Added

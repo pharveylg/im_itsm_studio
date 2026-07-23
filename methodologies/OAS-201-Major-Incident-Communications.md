@@ -385,8 +385,8 @@ The AI shall distinguish factual communications from inferred intent and explici
 
 ## Related Knowledge Base
 
-- OAS-KB-001 Operational Knowledge Templates (planned)
-- OAS-KB-002 Analysis Checklists (planned)
+- OAS-KB-001 Operational Knowledge Templates
+- OAS-KB-002 Analysis Checklists
 
 ---
 

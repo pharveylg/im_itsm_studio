@@ -1,6 +1,6 @@
 # Operational Analysis Standard (OAS)
 
-> **Release:** 1.1.0 &nbsp;|&nbsp; **Status:** Approved &nbsp;|&nbsp; **Effective:** 2026-07-23 &nbsp;|&nbsp; **Classification:** Internal
+> **Release:** 1.2.0 &nbsp;|&nbsp; **Status:** Approved &nbsp;|&nbsp; **Effective:** 2026-07-23 &nbsp;|&nbsp; **Classification:** Internal
 
 The **Operational Analysis Standard (OAS)** is an enterprise standards library that defines
 evidence-based methodologies for analysing operational records across the IT Service
@@ -102,7 +102,7 @@ oas/
 │   ├── OAS-301-Problem-Analysis.md
 │   └── OAS-401-Change-Analysis.md
 │
-├── knowledge-base/                        # Reusable assets (planned — see knowledge-base/README.md)
+├── knowledge-base/                        # Reusable assets (authored — see knowledge-base/README.md)
 │   ├── README.md
 │   ├── templates/      (OAS-KB-001)
 │   ├── checklists/     (OAS-KB-002)
@@ -129,15 +129,17 @@ asset once it is published.
 
 ## Release Version
 
-- **Current release:** `1.1.0`
+- **Current release:** `1.2.0`
 - **Release date:** 2026-07-23
 - **Status:** Approved (editorial review complete)
-- **Scope:** Six standards — OAS-000, OAS-101, OAS-201, OAS-301, OAS-401, OAS-501.
-- **1.1.0 change:** All six standards elaborated for professional depth — expanded
-  principles with rationale and examples, per-phase assessment guidance, definitions,
-  worked examples, and anti-patterns. No methodological break (Minor version).
-- **Not yet included:** Knowledge Base assets (OAS-KB-001 … OAS-KB-006) and ratified
-  style guides. These are planned and will be derived from the frozen standards.
+- **Scope:** Six standards — OAS-000, OAS-101, OAS-201, OAS-301, OAS-401, OAS-501 — plus
+  the Knowledge Base (OAS-KB-001 … OAS-KB-006).
+- **1.1.0 change:** All six standards elaborated for professional depth (rationale,
+  examples, per-phase guidance, definitions, worked examples, anti-patterns).
+- **1.2.0 change:** Knowledge Base authored — templates, checklists, report templates,
+  worked examples, reference guides, and an AI prompt library, all derived from the frozen
+  standards.
+- **Not yet included:** Ratified style guides (`style-guide/` remains DRAFT seeds).
 
 See `CHANGELOG.md` for the full release history.
 
@@ -181,10 +183,9 @@ See `CHANGELOG.md` for the full release history.
 
 ## Status of the Knowledge Base
 
-The Knowledge Base is **planned but not yet authored**. It will be *derived* from the
-approved standards (for example, OAS-KB-002 checklists from the methodologies, OAS-KB-001
-templates from OAS-501). Until then, references to OAS-KB-001 … OAS-KB-006 are forward
-pointers. See `knowledge-base/README.md`.
+The Knowledge Base is **authored** in Release 1.2.0 and is *derived* from the approved
+standards (for example, OAS-KB-002 checklists from the methodologies, OAS-KB-001 templates
+from OAS-501). See `knowledge-base/README.md` for the full asset index.
 
 ---
 

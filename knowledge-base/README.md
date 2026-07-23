@@ -1,31 +1,31 @@
-# Knowledge Base (Planned)
+# Knowledge Base
 
-> The OAS Knowledge Base is **planned but not yet authored**. This directory is a
-> placeholder to preserve repository structure under version control.
+> **Status:** Authored (Release 1.2.0). Derived from the approved OAS standards.
+> The Knowledge Base supports consistent execution of OAS and shall never supersede
+> Governance Standards (OAS-000, OAS-501) or Analysis Methodologies.
 
 ## Purpose
 
 The Knowledge Base contains reusable operational assets that support consistent
-implementation of the OAS standards. It is *derived* from the approved standards and shall
-never supersede Governance Standards or Analysis Methodologies (OAS-000).
+implementation of the OAS standards. Every asset is **derived** from the frozen standards
+— not the reverse.
 
-## Planned Assets (OAS-KB-001 … OAS-KB-006)
+## Authored Assets (OAS-KB-001 … OAS-KB-006)
 
-| ID | Folder | Derived from | Purpose |
-|----|--------|--------------|---------|
-| OAS-KB-001 | `templates/` | OAS-501 | Operational Knowledge Templates |
-| OAS-KB-002 | `checklists/` | OAS-101 / OAS-201 / OAS-301 / OAS-401 | Analysis Checklists |
-| OAS-KB-003 | `reports/` | All methodologies | Report Templates |
-| OAS-KB-004 | `examples/` | All methodologies | Worked Examples |
-| OAS-KB-005 | `references/` | OAS-000 | Reference Guides |
-| OAS-KB-006 | `prompts/` | All methodologies | Prompt Library |
+| ID | Folder | Derived from | Contents |
+|----|--------|--------------|----------|
+| OAS-KB-001 | `templates/` | OAS-501 | Operational Knowledge Templates (article, runbook, known error, work instruction) |
+| OAS-KB-002 | `checklists/` | OAS-000, OAS-101, OAS-201, OAS-301, OAS-401 | Analysis Checklists (consolidated QA checklists) |
+| OAS-KB-003 | `reports/` | OAS-000 §16 | Report Templates (analysis report, executive summary, evidence manifest, evidence matrix, confidence) |
+| OAS-KB-004 | `examples/` | OAS-101, OAS-201, OAS-301, OAS-401 | Operational Examples (full worked analyses) |
+| OAS-KB-005 | `references/` | OAS-000 | Reference Guides (evidence hierarchy, confidence model, normative language, ServiceNow mapping, glossary) |
+| OAS-KB-006 | `prompts/` | OAS-000 §14, all methodologies | Prompt Library (AI-assisted analysis prompts) |
 
 ## Dependency Note
 
-The Knowledge Base depends on the standards, not the other way around. Authoring begins
-only after the governing standards are frozen (this release, OAS 1.0.0).
-
-See the top-level `README.md` for the current release status.
+The Knowledge Base depends on the standards. It was authored only after the governing
+standards were frozen (OAS 1.1.0). See the top-level `README.md` for the current release
+status.
 
 ---
 
