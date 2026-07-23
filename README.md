@@ -116,7 +116,7 @@ oas/
 │   ├── diagrams/
 │   └── logos/
 │
-├── presentation/                         # Slide deck (Major Incident showcase)
+├── presentation/                         # Slide decks (Major Incident showcase: .html + .pptx)
 └── style-guide/                           # Documentation style (DRAFT)
     ├── Documentation-Style-Guide.md
     └── Markdown-Conventions.md

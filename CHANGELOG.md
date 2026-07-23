@@ -7,9 +7,11 @@ semantic versioning: *Major* = breaking methodological change, *Minor* = new cap
 ## [1.2.2] — 2026-07-23
 
 ### Added
-- Presentation deck: `presentation/oas-major-incident-deck.html` — a reveal.js + Mermaid
-  slide deck showcasing all OAS standards through the Major Incident (OAS-201) lens and its
-  relationships to OAS-000, OAS-101, OAS-301, OAS-401, OAS-501, and the Knowledge Base.
+- Presentation deck (Major Incident showcase) through the OAS-201 lens, covering all
+  standards and the Knowledge Base:
+  - `presentation/oas-major-incident-deck.html` — reveal.js + Mermaid (web-presentable).
+  - `presentation/oas-major-incident-deck.pptx` — native PowerPoint (18 slides).
+- Build script: `build_deck.py`.
 
 ### Changed
 - Bumped library release to 1.2.2 (supplementary asset; no standards change).
