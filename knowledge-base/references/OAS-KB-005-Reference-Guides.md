@@ -25,6 +25,16 @@ Quick-reference cards distilled from **OAS-000**. Keep these open during analysi
 | Priority | Source | Use |
 |----------|--------|-----|
 | 1 | Primary ITSM Record | Authoritative for its own fields |
+
+```mermaid
+graph TD
+  E1["1 · Primary ITSM Record"] --> E2["2 · Related ITSM Record"]
+  E2 --> E3["3 · Vendor Record"]
+  E3 --> E4["4 · Monitoring System"]
+  E4 --> E5["5 · Email Communication"]
+  E5 --> E6["6 · User Supplied"]
+  E6 --> E7["7 · Analyst Notes"]
+```
 | 2 | Related ITSM Record | Linked records |
 | 3 | Vendor Record | Useful but commercially interested |
 | 4 | Monitoring System | Strong for technical state |

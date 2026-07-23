@@ -70,6 +70,16 @@ Operational knowledge shall:
 
 # Operational Knowledge Lifecycle
 
+```mermaid
+flowchart LR
+  D[Draft] --> TR[Technical Review]
+  TR --> AP[Approval]
+  AP --> PU[Published]
+  PU --> MA[Maintenance]
+  MA --> RT[Retired]
+  RT --> AR[Archived]
+```
+
 All operational documentation shall progress through the following lifecycle.
 
 ```text

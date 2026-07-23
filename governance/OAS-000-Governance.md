@@ -165,6 +165,19 @@ The objective is to *reduce uncertainty while maintaining analytical integrity*.
 
 # 6 Analysis Lifecycle
 
+```mermaid
+flowchart TD
+  A[Evidence Collection] --> B[Evidence Inventory]
+  B --> C[Evidence Classification]
+  C --> D[Record Analysis]
+  D --> E[Cross-Record Correlation]
+  E --> F[Timeline Reconstruction]
+  F --> G[Gap Identification]
+  G --> H[Confidence Assessment]
+  H --> I[Operational Assessment]
+  I --> J[Executive Summary]
+```
+
 Every analysis shall follow the same lifecycle. This is the *conceptual* sequence of analytical stages; the operational execution workflow is provided in Appendix C.
 
 | Stage | Description |
@@ -183,6 +196,16 @@ Every analysis shall follow the same lifecycle. This is the *conceptual* sequenc
 ---
 
 # 7 Evidence Hierarchy
+
+```mermaid
+graph TD
+  E1["1 · Primary ITSM Record"] --> E2["2 · Related ITSM Record"]
+  E2 --> E3["3 · Vendor Record"]
+  E3 --> E4["4 · Monitoring System"]
+  E4 --> E5["5 · Email Communication"]
+  E5 --> E6["6 · User Supplied"]
+  E6 --> E7["7 · Analyst Notes"]
+```
 
 Operational evidence shall be evaluated according to its authority. Higher-priority sources are preferred when sources conflict, but authority never exempts a source from challenge.
 
@@ -244,6 +267,17 @@ Every significant finding shall include a confidence rating.
 ---
 
 # 11 Record Relationships
+
+```mermaid
+graph TD
+  INC[Incident] --> MI[Major Incident]
+  MI --> CHG[Change]
+  CHG --> PRB[Problem]
+  PRB --> VEND[Vendor Case]
+  VEND --> TASK[Task]
+  TASK --> CI[Configuration Item]
+  CI --> KA[Knowledge Article]
+```
 
 Operational records exist within a service management ecosystem.
 
@@ -376,6 +410,15 @@ Before publication verify:
 ---
 
 # 18 Methodology Hierarchy
+
+```mermaid
+graph TD
+  O0[OAS-000 Governance] -->|governs| O1[OAS-101 Incident]
+  O0 -->|governs| O2[OAS-201 MI Comms]
+  O0 -->|governs| O3[OAS-301 Problem]
+  O0 -->|governs| O4[OAS-401 Change]
+  O0 -->|governs| O5[OAS-501 Knowledge]
+```
 
 This standard governs all operational methodologies and governance standards within the OAS library.
 

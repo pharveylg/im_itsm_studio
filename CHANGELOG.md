@@ -4,6 +4,24 @@ All notable changes to the OAS library are recorded here. The library as a whole
 semantic versioning: *Major* = breaking methodological change, *Minor* = new capability,
 *Patch* = editorial correction.
 
+## [1.2.1] — 2026-07-23
+
+### Added
+- Relationship visuals across the library:
+  - OAS-000: evidence hierarchy, analysis lifecycle, record relationships, methodology hierarchy.
+  - OAS-101 / OAS-201 / OAS-301 / OAS-401: methodology phase flows, related-record maps,
+    stakeholder/handover (201), corrective/preventive P/P/T (301), change intent (401).
+  - OAS-501: knowledge lifecycle.
+  - knowledge-base/README.md: derived-from map; KB-005: evidence-hierarchy visual.
+  - README.md: framework architecture (Mermaid + SVG) and ITIL/ServiceNow relationship.
+- Static SVG architecture export at `assets/diagrams/oas-architecture.svg` for viewers
+  without Mermaid support.
+
+### Changed
+- Bumped library release to 1.2.1 (documentation enhancement; no method change).
+
+---
+
 ## [1.2.0] — 2026-07-23
 
 ### Added

@@ -120,6 +120,15 @@ Every evidence source listed above shall be classified using the Evidence States
 
 ## Analysis Methodology
 
+```mermaid
+graph TD
+  MIM[Major Incident Manager] --> OPS[Operational Teams]
+  MIM --> EXEC[Executives]
+  MIM --> CUST[Customers]
+  MIM --> VEND[Vendors]
+  BR[Bridge / SITREP] --> MIM
+```
+
 ### Phase 1 — Context
 
 **Objective:** Understand the communication problem space before assessing messages.
@@ -212,6 +221,15 @@ Where vendor communications are available, evaluate escalation effectiveness, in
 ---
 
 ### Phase 6 — Major Incident Manager (MIM) Handovers
+
+```mermaid
+flowchart LR
+  A[MIM A] -->|Handover| B[MIM B]
+  N1[Narrative continuity] --> B
+  N2[Stakeholder awareness] --> B
+  N3[Key decisions] --> B
+  N4[Cadence] --> B
+```
 
 **Objective:** Evaluate only the effectiveness of operational continuity across handovers.
 

@@ -227,6 +227,13 @@ Assess:
 
 ### Phase 6 — Related Record Assessment
 
+```mermaid
+graph LR
+  INC[Incident — Primary] --> PRB[Problem]
+  INC --> CHG[Change]
+  INC --> MI[Major Incident]
+```
+
 Where available, evaluate related records for consistency.
 
 #### Problem

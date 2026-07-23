@@ -1,6 +1,6 @@
 # Operational Analysis Standard (OAS)
 
-> **Release:** 1.2.0 &nbsp;|&nbsp; **Status:** Approved &nbsp;|&nbsp; **Effective:** 2026-07-23 &nbsp;|&nbsp; **Classification:** Internal
+> **Release:** 1.2.1 &nbsp;|&nbsp; **Status:** Approved &nbsp;|&nbsp; **Effective:** 2026-07-23 &nbsp;|&nbsp; **Classification:** Internal
 
 The **Operational Analysis Standard (OAS)** is an enterprise standards library that defines
 evidence-based methodologies for analysing operational records across the IT Service
@@ -75,7 +75,7 @@ OAS
 │   ├── OAS-201  Major Incident Communications
 │   ├── OAS-301  Problem Analysis
 │   └── OAS-401  Change Analysis
-└── Knowledge Base (planned — OAS-KB-001 … OAS-KB-006)
+└── Knowledge Base (authored — OAS-KB-001 … OAS-KB-006)
 ```
 
 ---
@@ -129,7 +129,7 @@ asset once it is published.
 
 ## Release Version
 
-- **Current release:** `1.2.0`
+- **Current release:** `1.2.1`
 - **Release date:** 2026-07-23
 - **Status:** Approved (editorial review complete)
 - **Scope:** Six standards — OAS-000, OAS-101, OAS-201, OAS-301, OAS-401, OAS-501 — plus
@@ -139,6 +139,8 @@ asset once it is published.
 - **1.2.0 change:** Knowledge Base authored — templates, checklists, report templates,
   worked examples, reference guides, and an AI prompt library, all derived from the frozen
   standards.
+- **1.2.1 change:** Added relationship visuals — 16 Mermaid diagrams across the standards
+  and Knowledge Base, plus a static SVG architecture export in `assets/diagrams/`.
 - **Not yet included:** Ratified style guides (`style-guide/` remains DRAFT seeds).
 
 See `CHANGELOG.md` for the full release history.

@@ -83,6 +83,13 @@ Change analysis shall:
 
 ## Supported Change Intent
 
+```mermaid
+graph TD
+  CHG[Change] --> A[401A · Planned Enhancement]
+  CHG --> B[401B · Operational Remediation]
+  B --> INC[from Incident / Problem]
+```
+
 Changes should first be classified according to operational intent.
 
 ### 401A – Planned Enhancement
@@ -139,6 +146,19 @@ Every evidence source listed above shall be classified using the Evidence States
 ---
 
 ## Analysis Methodology
+
+```mermaid
+flowchart TD
+  P1[1 · Context] --> P2[2 · Planning Integrity]
+  P2 --> P3[3 · Risk]
+  P3 --> P4[4 · Type]
+  P4 --> P5[5 · Implementation]
+  P5 --> P6[6 · Rollback Symmetry]
+  P6 --> P7[7 · Recoverability]
+  P7 --> P8[8 · Validation]
+  P8 --> P9[9 · Success Class]
+  P9 --> P10[10 · Related Records]
+```
 
 ### Phase 1 — Context
 
@@ -289,6 +309,13 @@ Approved classifications:
 ---
 
 ### Phase 10 — Related Record Assessment
+
+```mermaid
+graph LR
+  CHG[Change] --> INC[Incident]
+  CHG --> PRB[Problem]
+  CHG --> O4[OAS-401]
+```
 
 Where available, evaluate consistency with:
 

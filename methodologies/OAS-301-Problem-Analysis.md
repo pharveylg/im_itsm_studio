@@ -75,6 +75,14 @@ Where Post Incident/Implementation Review (PIR) artefacts exist, they may be use
 
 ## Analytical Responsibility
 
+```mermaid
+graph LR
+  O3[OAS-301 Problem] --> O1[OAS-101 Incident]
+  O3 --> O2[OAS-201 MI Comms]
+  O3 --> O4[OAS-401 Change]
+  O3 --> O5[OAS-501 Knowledge]
+```
+
 OAS-301 evaluates the investigation.
 
 It does **not** assume that documented conclusions are correct.
@@ -177,6 +185,21 @@ Evidence limitations shall be documented.
 ---
 
 ## Analysis Methodology
+
+```mermaid
+flowchart TD
+  A[Evidence Inventory] --> B[Problem Context]
+  B --> C[Evidence Assessment]
+  C --> D[Investigation Assessment]
+  D --> E[Root Cause]
+  E --> F[Known Error]
+  F --> G[Corrective Actions]
+  G --> H[Preventive Actions]
+  H --> I[Related Correlation]
+  I --> J[Investigation Quality]
+  J --> K[Technical Conclusion]
+  K --> L[Executive Summary]
+```
 
 Every Problem investigation shall follow the analytical lifecycle below, then the assessment phases.
 
@@ -309,6 +332,13 @@ A Known Error is only valuable if someone encountering the symptom can find it a
 ---
 
 ### Phase 6 — Corrective Action Assessment
+
+```mermaid
+graph TD
+  CA[Corrective / Preventive Actions] --> PPL[People]
+  CA --> PRO[Process]
+  CA --> TEC[Technology]
+```
 
 Corrective Actions shall be evaluated across three domains.
 
