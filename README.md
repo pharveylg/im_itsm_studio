@@ -5,10 +5,15 @@ Semi-manual ServiceNow XML analysis and knowledge article authoring for incident
 ## Features
 
 - **ITSM Analysis** — cross-module governance review from ServiceNow XML exports
+
 - **MI Comms Analysis** — major incident communications, email SLA, and stakeholder review
+
 - **Knowledge Authoring** — ServiceNow-ready KB articles with style guide enforcement
+
 - **Multi-provider AI** — OpenAI, Anthropic Claude, Azure OpenAI, Ollama, or any OpenAI-compatible endpoint
+
 - **Persistent guidelines** — upload once, reuse across analyses
+
 - **ServiceNow connection** — REST API integration (coming soon)
 
 ## Deploy: GitHub → Supabase → Vercel
@@ -16,10 +21,15 @@ Semi-manual ServiceNow XML analysis and knowledge article authoring for incident
 ### 1. Create a Supabase project
 
 1. Go to [supabase.com](https://supabase.com) → **New project**
+
 2. Choose a name, set a database password, select a region
+
 3. Once created, go to **Project Settings → Database**
+
 4. Under **Connection string → URI**, copy the connection string  
+
    Format: `postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres`
+
 5. **Important:** use the **port 6543** pooler URI (not 5432) — Vercel serverless needs connection pooling
 
 ### 2. Push the schema to Supabase
@@ -44,7 +54,9 @@ You should see tables created: `connection_config`, `ai_provider_configs`, `stor
 ### 3. Deploy to Vercel
 
 1. Push the repo to GitHub
+
 2. Go to [vercel.com](https://vercel.com) → **Add New Project** → import the GitHub repo
+
 3. In **Environment Variables**, add:
 
 | Variable | Value |
@@ -58,17 +70,23 @@ That's it. Vercel builds and deploys automatically on every push.
 ### 4. Configure AI providers
 
 1. Open your Vercel deployment URL
+
 2. Go to **Settings** → **AI Analysis Engine**
+
 3. Configure at least one provider:
+
    - **Anthropic**: paste your API key from [console.anthropic.com](https://console.anthropic.com)
    - **Azure OpenAI**: paste endpoint + key from Azure Portal
    - **OpenAI**: paste your `sk-...` key
+
 4. Enable the provider and save
 
 ### 5. Store your governance guidelines
 
 1. Still in **Settings**, scroll to **Saved Guidelines** (or use the Workbench sidebar)
+
 2. Upload your MI Communications SOP, Change Review Standard, etc.
+
 3. These persist in Supabase and are reusable across all analyses
 
 ## Environment Variables
