@@ -587,27 +587,84 @@ Before finalising verify:
 
 ---
 
+## Required Report Structure
+
+All Problem analyses **shall** produce output in the following structured format for consistency and auditability.
+
+### Report Header
+- Problem Number
+- Title / Short Description
+- Current State
+- Priority
+- Opened / Last Updated timestamps
+- Generated timestamp
+
+### AREA 1: INVESTIGATION QUALITY & EVIDENCE STRENGTH
+
+- Evidence Inventory Summary (Present / Referenced / Missing / Not Applicable)
+- Investigation Planning Assessment
+- SME Engagement & Documentation Quality
+- Overall Investigation Rigour Rating (Excellent / Good / Adequate / Poor)
+- Key Evidence Gaps
+
+### AREA 2: ROOT CAUSE & KNOWN ERROR ASSESSMENT
+
+- Stated Root Cause
+- Evidence Support Evaluation:
+  - **Supported** / **Partially Supported** / **Not Supported** / **Unable to Determine**
+- Supporting Evidence Summary
+- Contradictory Evidence (if any)
+- Known Error Assessment (adequacy, documentation quality, reusability)
+- Verdict per element with confidence rating
+
+### AREA 3: CORRECTIVE & PREVENTIVE ACTIONS
+
+- Corrective Actions (People / Process / Technology breakdown)
+  - Relevance, Ownership, Feasibility, Traceability, Expected Effectiveness
+- Preventive Actions (People / Process / Technology breakdown)
+  - Recurrence reduction potential, Ownership, Measurability
+- Action Completeness Assessment
+- Verdict: Strong / Adequate / Weak / Missing
+
+### AREA 4: RISK OF RECURRENCE & GOVERNANCE
+
+- Residual Risk of Recurrence (High / Medium / Low) with rationale
+- Governance Observations
+- Outstanding Evidence / Questions
+- Overall Problem Investigation Verdict
+- Key Recommendations
+
+**Verdict symbols shall be used consistently:**
+- ✅ **Strong / Supported**
+- 🔴 **Weak / Not Supported / Breach**
+- ⚠️ **Partial / Unknown / Risk**
+- **Adequate**
+
+---
+
 ## AI Operating Standard
 
-When analysing a Problem investigation:
+When analysing a Problem investigation the AI **shall**:
 
 1. Inventory all evidence (classify Evidence States).
 2. Inherit established operational facts from OAS-101.
 3. Inherit the operational narrative from OAS-201.
-4. Evaluate the investigation independently.
-5. Assess Root Cause against evidence.
-6. Assess Known Error against evidence.
-7. Assess Corrective and Preventive Actions.
+4. Evaluate the investigation quality (AREA 1).
+5. Assess Root Cause and Known Error against evidence (AREA 2).
+6. Assess Corrective and Preventive Actions using People/Process/Technology (AREA 3).
+7. Evaluate residual risk of recurrence and governance (AREA 4).
 8. Correlate related records.
 9. Identify unsupported conclusions.
-10. Assign confidence to conclusions.
-11. Produce an evidence-based executive assessment.
+10. Assign confidence to all significant conclusions.
+11. Produce the complete structured report using the exact AREA format defined above.
 
 Never assume documented conclusions are correct.
 
 Never infer technical findings that are unsupported by evidence.
 
 Explicitly document uncertainty where evidence is incomplete.
+
+All verdicts must reference specific evidence and carry an explicit confidence rating.
 
 ---
 
@@ -634,6 +691,7 @@ Explicitly document uncertainty where evidence is incomplete.
 |----------|------|---------|---------|----------|
 | 1.0 | 2026-07-23 | Initial approved release (restructured to Standard Document Structure; cross-references corrected) | | |
 | 1.1 | 2026-07-23 | Elaborated for comprehensiveness: definitions, per-phase assessment guidance, Supported/Not-Supported examples, P/P/T action evaluation, worked example | | |
+| 1.2 | 2026-08-07 | Added Required Report Structure (AREA 1–4) and updated AI Operating Standard to enforce structured compliance-style output | OAS Agent | |
 
 ---
 
