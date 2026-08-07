@@ -372,23 +372,62 @@ Before completing the analysis verify:
 
 ---
 
+## Required Report Structure
+
+All Major Incident Communications analyses **shall** produce output in the following structured format. This ensures consistency, auditability, and direct alignment with compliance expectations.
+
+### Report Header
+- Incident identifier
+- Report title: “INCIDENT COMPLIANCE REPORT”
+- Incident number, short description, Priority, Opened/Closed timestamps
+- Generated timestamp
+
+### AREA 1: COMMUNICATION FREQUENCY COMPLIANCE
+- Applicable SOP Standards for the priority level
+- Chronological Communication Log (table with #, Event, Timestamp (UTC), Source)
+- Gap-by-Gap Compliance Analysis (detailed table per gap with: Last reference point, Next communication, Actual gap, Required frequency, Verdict)
+- Overall Communication Frequency Compliance Rate (with counts and percentage)
+- Overall Verdict
+
+### AREA 2: OWNERSHIP GAPS & AUTOMATION OPPORTUNITIES
+- Per-breach ownership analysis (primary, secondary, tertiary accountability)
+- Automation Opportunities for each identified breach
+
+### AREA 3: SUFFICIENCY ASSESSMENT
+- Assessment of each major communication (Preliminary, Updates, Closed, etc.)
+- Verdict per communication (COMPLIANT, COMPLIANT-BUT-INSUFFICIENT, UNKNOWN/RISK, BREACH)
+
+### AREA 4: COMMUNICATION QUALITY REVIEW
+- Consistency findings
+- Issues identified (with clear ISSUE numbering)
+- Any additional quality observations
+
+**Verdict symbols shall be used consistently:**
+- ✅ **COMPLIANT**
+- 🔴 **BREACH**
+- ⚠️ **UNKNOWN** / **RISK**
+- **COMPLIANT-BUT-INSUFFICIENT**
+
+---
+
 ## AI Operating Standard
 
-When analysing Major Incident communications:
+When analysing Major Incident communications the AI **shall**:
 
 1. Establish incident context.
 2. Reconstruct the communication timeline.
 3. Validate evidence completeness (classify Evidence States).
-4. Assess communication quality.
-5. Evaluate communication timeliness.
-6. Assess stakeholder-specific communications.
-7. Evaluate MIM handovers for continuity only.
-8. Assess governance and communication effectiveness.
-9. Assign confidence to findings.
-10. Produce evidence-based findings.
-11. Capture actionable Lessons for Communication.
+4. Identify applicable SOP standards for the incident priority.
+5. Build a chronological communication log.
+6. Perform gap-by-gap compliance analysis using the Required Report Structure (AREA 1).
+7. Conduct ownership analysis and identify automation opportunities (AREA 2).
+8. Assess sufficiency of each communication (AREA 3).
+9. Review communication quality and consistency (AREA 4).
+10. Assign confidence to findings using the OAS-000 model.
+11. Produce the complete structured report using the exact AREA format defined above.
+12. Capture actionable Lessons for Communication.
 
-The AI shall distinguish factual communications from inferred intent and explicitly identify where evidence is incomplete.
+The AI shall distinguish factual communications from inferred intent and explicitly identify where evidence is incomplete. All verdicts must be supported by specific timestamps and evidence references.
 
 ---
 
@@ -414,6 +453,7 @@ The AI shall distinguish factual communications from inferred intent and explici
 |----------|------|---------|---------|----------|
 | 1.0 | 2026-07-23 | Initial approved release | | |
 | 1.1 | 2026-07-23 | Elaborated for comprehensiveness: definitions, per-phase guidance, stakeholder frameworks, worked example, recommendation example | | |
+| 1.2 | 2026-08-07 | Added Required Report Structure (AREA 1–4) and updated AI Operating Standard to align analysis output with structured Incident Compliance Report format | OAS Agent | |
 
 ---
 
