@@ -80,7 +80,7 @@
     {
       "oas_id": "OAS-201",
       "title": "Major Incident Communications Methodology",
-      "version": "1.1",
+      "version": "1.2",
       "status": "Approved",
       "file": "oas-standards/methodologies/OAS-201-Major-Incident-Communications.md",
       "role": "major-incident-comms",
@@ -97,7 +97,8 @@
         "Phase 5 - Stakeholder Communications",
         "Phase 6 - Major Incident Manager (MIM) Handovers",
         "Phase 7 - Communication Governance",
-        "Phase 8 - Communication Effectiveness"
+        "Phase 8 - Communication Effectiveness",
+        "Required Report Structure (AREA 1-4)"
       ],
       "qa_checklist_section": "Quality Assurance Checklist",
       "prompt_contract_section": "AI Operating Standard",
