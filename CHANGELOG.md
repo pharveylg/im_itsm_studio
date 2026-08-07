@@ -4,6 +4,18 @@ All notable changes to the OAS library are recorded here. The library as a whole
 semantic versioning: *Major* = breaking methodological change, *Minor* = new capability,
 *Patch* = editorial correction.
 
+## [1.2.3] — 2026-08-07
+
+### Added
+- **OAS-201 v1.2**: Required Report Structure section defining the four-area Incident Compliance Report format (AREA 1–4) with gap-by-gap tables, ownership analysis, sufficiency assessment, and consistent verdict symbols.
+- Updated AI Operating Standard in OAS-201 to mandate the new structured compliance reporting format.
+
+### Changed
+- Bumped OAS-201 from 1.1 to 1.2.
+- Bumped library release to 1.2.3.
+
+---
+
 ## [1.2.2] — 2026-07-23
 
 ### Added
