@@ -634,6 +634,7 @@ Explicitly document uncertainty where evidence is incomplete.
 |----------|------|---------|---------|----------|
 | 1.0 | 2026-07-23 | Initial approved release (restructured to Standard Document Structure; cross-references corrected) | | |
 | 1.1 | 2026-07-23 | Elaborated for comprehensiveness: definitions, per-phase assessment guidance, Supported/Not-Supported examples, P/P/T action evaluation, worked example | | |
+| 1.2 | 2026-08-07 | Added Required Report Structure (AREA 1–4) and updated AI Operating Standard to enforce structured compliance-style output | OAS Agent | |
 
 ---
 
