@@ -432,23 +432,81 @@ Before completing the analysis verify:
 
 ---
 
+## Required Report Structure
+
+All Change analyses **shall** produce output in the following structured format for consistency and auditability.
+
+### Report Header
+- Change Number
+- Title / Short Description
+- Change Type (Standard / Normal / Emergency)
+- Risk Classification
+- Intent (401A Planned Enhancement / 401B Operational Remediation)
+- Planned / Actual Implementation Window
+- Generated timestamp
+
+### AREA 1: PLANNING & RISK ASSESSMENT
+
+- Change Intent Classification (401A / 401B)
+- Planning Integrity Assessment
+- Risk Classification Appropriateness
+- Change Type Appropriateness
+- Key Planning Gaps or Strengths
+- Verdict: Strong / Adequate / Weak
+
+### AREA 2: IMPLEMENTATION & EXECUTION
+
+- Execution vs Plan Assessment
+- Deviations and Traceability
+- Stakeholder Communication Quality
+- Schedule Adherence
+- Technical Issues Encountered
+- Verdict per element
+
+### AREA 3: ROLLBACK, RECOVERABILITY & VALIDATION
+
+- Rollback Symmetry Assessment (proportionate to implementation)
+- Recoverability Assessment
+- Operational Validation Evidence
+- Service Restoration Approach
+- Verdict: Strong / Adequate / Weak / Missing
+
+### AREA 4: SUCCESS CLASSIFICATION & GOVERNANCE
+
+- Evidence-based Success Classification (Successful / Partially Successful / Unsuccessful / Unconfirmed)
+- Related Record Correlation (with OAS-101 / OAS-301)
+- Governance Observations
+- Residual Risks
+- Overall Change Verdict
+- Key Recommendations
+
+**Verdict symbols shall be used consistently:**
+- ✅ **Strong / Supported**
+- 🔴 **Weak / Not Supported / Breach**
+- ⚠️ **Partial / Unknown / Risk**
+- **Adequate**
+
+---
+
 ## AI Operating Standard
 
-When analysing a Change:
+When analysing a Change the AI **shall**:
 
-1. Establish operational context.
+1. Establish operational context and change intent (401A / 401B).
 2. Validate evidence completeness (classify Evidence States).
-3. Assess planning before execution.
-4. Evaluate implementation objectively.
-5. Assess rollback independently.
-6. Assess recoverability independently.
-7. Validate operational outcomes.
+3. Assess planning integrity and risk appropriateness (AREA 1).
+4. Evaluate implementation objectively (AREA 2).
+5. Assess rollback symmetry and recoverability (AREA 3).
+6. Validate operational outcomes and success classification (AREA 4).
+7. Correlate with related Incident/Problem records.
 8. Distinguish observations from findings.
-9. Assign confidence to findings.
-10. Produce evidence-based recommendations.
+9. Assign confidence to all significant conclusions.
+10. Produce the complete structured report using the exact AREA format defined above.
 11. Identify lessons learned.
 
 The AI shall not infer successful implementation solely from record closure and shall explicitly identify limitations where evidence is incomplete.
+
+All verdicts must reference specific evidence and carry an explicit confidence rating.
 
 ---
 
@@ -474,6 +532,7 @@ The AI shall not infer successful implementation solely from record closure and 
 |----------|------|---------|---------|----------|
 | 1.0 | 2026-07-23 | Initial approved release | | |
 | 1.1 | 2026-07-23 | Elaborated for comprehensiveness: definitions, per-phase guidance, risk/rollback/success examples, worked example | | |
+| 1.2 | 2026-08-07 | Added Required Report Structure (AREA 1–4) and updated AI Operating Standard to enforce structured compliance-style output | OAS Agent | |
 
 ---
 
