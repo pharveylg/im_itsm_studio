@@ -2,8 +2,8 @@
   "catalog_version": "1.0",
   "library": {
     "name": "Operational Analysis Standard (OAS)",
-    "release": "1.2.2",
-    "generated_on": "2026-07-23",
+    "release": "1.2.3",
+    "generated_on": "2026-08-07",
     "source_repo": "https://github.com/pharveylg/im_itsm_studio",
     "standards_path": "oas-standards/",
     "git_ref": "main",
@@ -28,7 +28,7 @@
     {
       "oas_id": "OAS-000",
       "title": "OAS Governance",
-      "version": "1.1",
+      "version": "1.2",
       "status": "Approved",
       "effective_date": "2026-07-23",
       "file": "oas-standards/governance/OAS-000-Governance.md",
@@ -107,7 +107,7 @@
     {
       "oas_id": "OAS-301",
       "title": "Problem Analysis Methodology",
-      "version": "1.1",
+      "version": "1.2",
       "status": "Approved",
       "file": "oas-standards/methodologies/OAS-301-Problem-Analysis.md",
       "role": "problem",
@@ -129,7 +129,8 @@
         "Phase 10 - Related Record Correlation",
         "Phase 11 - Investigation Quality Assessment",
         "Phase 12 - Technical Conclusion Assessment",
-        "Phase 13 - Risk of Recurrence"
+        "Phase 13 - Risk of Recurrence",
+        "Required Report Structure (AREA 1-4)"
       ],
       "qa_checklist_section": "Quality Assurance Checklist",
       "prompt_contract_section": "AI Operating Standard",
@@ -138,7 +139,7 @@
     {
       "oas_id": "OAS-401",
       "title": "Change Analysis Methodology",
-      "version": "1.1",
+      "version": "1.2",
       "status": "Approved",
       "file": "oas-standards/methodologies/OAS-401-Change-Analysis.md",
       "role": "change",
@@ -157,7 +158,8 @@
         "Phase 7 - Recoverability Assessment",
         "Phase 8 - Operational Validation",
         "Phase 9 - Success Classification",
-        "Phase 10 - Related Record Assessment"
+        "Phase 10 - Related Record Assessment",
+        "Required Report Structure (AREA 1-4)"
       ],
       "qa_checklist_section": "Quality Assurance Checklist",
       "prompt_contract_section": "AI Operating Standard",
@@ -166,7 +168,7 @@
     {
       "oas_id": "OAS-501",
       "title": "Operational Knowledge Standard",
-      "version": "1.1",
+      "version": "1.2",
       "status": "Approved",
       "file": "oas-standards/governance/OAS-501-Operational-Knowledge-Standard.md",
       "role": "knowledge",
@@ -185,7 +187,8 @@
         "Archived",
         "Procedure",
         "Validation",
-        "Rollback / Recovery"
+        "Rollback / Recovery",
+        "Required Report Structure (AREA 1-4)"
       ],
       "qa_checklist_section": "Quality Assurance Checklist",
       "prompt_contract_section": "AI Operating Standard",
