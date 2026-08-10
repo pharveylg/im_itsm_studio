@@ -424,9 +424,52 @@ Before publication verify:
 
 ---
 
+## Required Report Structure for Knowledge Reviews
+
+When the AI reviews operational documentation, it **shall** produce output using the following structured format:
+
+### Report Header
+- Document ID / Title
+- Current Lifecycle Stage
+- Version
+- Last Review Date
+- Generated timestamp
+
+### AREA 1: Governance & Lifecycle Compliance
+- Lifecycle stage assessment
+- Ownership completeness
+- Version and review date compliance
+- Verdict
+
+### AREA 2: Technical Accuracy & Clarity
+- Technical accuracy assessment
+- Clarity and consistency review
+- Context and scope evaluation
+- Verdict
+
+### AREA 3: Completeness & Usability
+- Procedure completeness
+- Validation and recovery coverage
+- Operational usability assessment
+- Verdict
+
+### AREA 4: Recommendations & Overall Assessment
+- Specific improvement recommendations
+- Overall quality rating
+- Key findings
+- Next actions
+
+**Verdict symbols shall be used consistently:**
+- ✅ **Strong / Compliant**
+- 🔴 **Weak / Non-compliant**
+- ⚠️ **Partial / Needs Improvement**
+- **Adequate**
+
+---
+
 # AI Operating Standard
 
-When reviewing operational documentation:
+When reviewing operational documentation the AI **shall**:
 
 1. Verify document purpose and scope.
 2. Confirm lifecycle status.
@@ -435,8 +478,9 @@ When reviewing operational documentation:
 5. Assess clarity and consistency.
 6. Verify completeness of operational procedures.
 7. Confirm validation and recovery information where applicable.
-8. Identify ambiguous, obsolete, or incomplete content.
-9. Recommend improvements supported by evidence.
+8. Produce the complete structured report using the AREA format defined above.
+9. Identify ambiguous, obsolete, or incomplete content.
+10. Recommend improvements supported by evidence.
 
 AI-assisted reviews shall preserve technical accuracy, distinguish observations from recommendations, and avoid introducing unsupported assumptions.
 
@@ -460,6 +504,7 @@ AI-assisted reviews shall preserve technical accuracy, distinguish observations 
 |----------|------|---------|---------|----------|
 | 1.0 | 2026-07-23 | Initial approved release | | |
 | 1.1 | 2026-07-23 | Elaborated for comprehensiveness: lifecycle-stage criteria, document-structure example, clarity/accuracy anti-patterns, expanded QA checklist | | |
+| 1.2 | 2026-08-07 | Added Required Report Structure for Knowledge Reviews and updated AI Operating Standard to enforce structured output | OAS Agent | |
 
 ---
 
