@@ -2,7 +2,7 @@
 document_id: OAS-000
 title: Operational Analysis Standard — Governance
 category: Governance Standard
-version: 1.1
+version: 1.2
 status: Approved
 owner: Operations
 classification: Internal
@@ -29,7 +29,7 @@ effective_date: 2026-07-23
 |---------|--------|
 | Standard | Operational Analysis Standard |
 | Identifier | OAS-000 |
-| Version | 1.1 |
+| Version | 1.2 |
 | Status | Approved |
 | Framework Alignment | ITIL 4 |
 | Applies To | Operational Analysis |
@@ -150,6 +150,10 @@ The following classes shall never be presented interchangeably:
 | **Recommendations** | Suggested future actions. |
 
 **Rationale:** Confusing an inference with a fact, or a hypothesis with a conclusion, is the most common failure mode in operational reporting.
+
+## 4.6 Structured Reporting
+
+All analyses shall follow the structured report format defined in §16.1. This includes the use of AREA sections and consistent verdict symbols.
 
 ---
 
@@ -543,6 +547,7 @@ Executive Review  ............  human validation and sign-off
 | 0.1 | YYYY-MM-DD | Initial draft | | |
 | 1.0 | 2026-07-23 | Promoted to Approved; corrected methodology hierarchy (§18); aligned metadata to Standard Metadata schema | Operations — OAS Working Group | Operations — Standards Governance Board |
 | 1.1 | 2026-07-23 | Elaborated for comprehensiveness: expanded principles with rationale and examples, evidence hierarchy guidance, confidence examples, glossary, and workflow annotations | Operations — OAS Working Group | Operations — Standards Governance Board |
+| 1.2 | 2026-08-07 | Added Structured Report Format (§16.1) and Verdict Symbol Standard; updated principles and AI section to enforce consistent reporting across all methodologies | OAS Agent | |
 
 ---
 
@@ -554,7 +559,3 @@ Executive Review  ............  human validation and sign-off
 | OAS000-002 | Proposed | Low | 1.2 | Worked example annex for each methodology |
 | OAS000-003 | Proposed | Low | 2.0 | Author OAS-601 Configuration Item Analysis |
 | OAS000-004 | Proposed | Low | 2.0 | Author OAS-901 AI Prompt Standard |
-
----
-
-End of Standard
