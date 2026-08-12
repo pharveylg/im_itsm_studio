@@ -1,0 +1,158 @@
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Sora", "Avenir Next", "Trebuchet MS", sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-paper: #f2f5ec;
+  --color-mist: #e4ebd9;
+  --color-line: #d2dcc3;
+  --color-ink: #182720;
+  --color-pine: #11342c;
+  --color-pine-deep: #0a241e;
+  --color-pine-soft: #1d4a3f;
+  --color-leaf: #43c463;
+  --color-leaf-deep: #1c7f3f;
+  --color-leaf-soft: #ddf3e2;
+  --color-ember: #e8a33d;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}
+
+/* Layered operational backdrop: fine drafting grid + soft green light. */
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1100px 520px at 88% -12%, rgba(67, 196, 99, 0.18), transparent 62%),
+    radial-gradient(900px 640px at -8% 24%, rgba(17, 52, 44, 0.10), transparent 58%),
+    linear-gradient(to bottom, #f3f6ee, #edf1e4);
+}
+
+.app-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(24, 63, 48, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 63, 48, 0.055) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(1200px 800px at 50% 0%, black 30%, transparent 90%);
+}
+
+.app-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(600px 300px at 70% 110%, rgba(67, 196, 99, 0.10), transparent 70%);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal {
+  animation: fade-up 0.7s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(67, 196, 99, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(67, 196, 99, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(67, 196, 99, 0);
+  }
+}
+
+.dot-live {
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+
+@keyframes blink-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.caret::after {
+  content: "▌";
+  margin-left: 2px;
+  color: var(--color-leaf);
+  animation: blink-caret 1.1s steps(1) infinite;
+}
+
+/* Coming-soon treatment: diagonal hairline stripes + slow light sweep. */
+.stripes {
+  position: relative;
+  overflow: hidden;
+}
+
+.stripes::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(17, 52, 44, 0.045) 0 10px,
+    transparent 10px 22px
+  );
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(240%) skewX(-18deg); }
+}
+
+.stripes::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(67, 196, 99, 0.10), transparent);
+  animation: sweep 4.5s ease-in-out infinite;
+}
+
+/* Terminal readout panel */
+.terminal {
+  background: linear-gradient(160deg, #0d2a23, #0a241e);
+  border: 1px solid rgba(67, 196, 99, 0.25);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35), 0 18px 40px -24px rgba(10, 36, 30, 0.6);
+}
+
+::selection {
+  background: rgba(67, 196, 99, 0.35);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-leaf-deep);
+  outline-offset: 2px;
+}
