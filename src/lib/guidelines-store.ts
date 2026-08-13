@@ -16,16 +16,25 @@ export type StoredGuideline = {
   extractedText: string;
   fileSizeBytes: number;
   wordCount: number | null;
+
+  // OAS Metadata
+  oasId: string | null;
+  oasVersion: string | null;
+  structuredFormat: string | null;
+  lastSyncedAt: string | null;
+
+  // GitHub Sync Tracking
   sourceRepo: string | null;
   sourcePath: string | null;
   sourceSha: string | null;
+
   useCount: number | null;
   lastUsedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
 
-/** Ensure the table exists. */
+/** Ensure the table exists (with all columns). */
 export async function ensureGuidelinesTable(): Promise<void> {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS stored_guidelines (
@@ -37,6 +46,10 @@ export async function ensureGuidelinesTable(): Promise<void> {
       extracted_text text NOT NULL,
       file_size_bytes integer NOT NULL,
       word_count integer DEFAULT 0,
+      oas_id text,
+      oas_version text,
+      structured_format text DEFAULT '4-area',
+      last_synced_at timestamptz,
       source_repo text,
       source_path text,
       source_sha text,
@@ -46,11 +59,6 @@ export async function ensureGuidelinesTable(): Promise<void> {
       updated_at timestamptz NOT NULL DEFAULT now()
     )
   `);
-
-  // Safely add columns for existing deployments
-  try { await db.execute(sql`ALTER TABLE stored_guidelines ADD COLUMN IF NOT EXISTS source_repo text`); } catch {}
-  try { await db.execute(sql`ALTER TABLE stored_guidelines ADD COLUMN IF NOT EXISTS source_path text`); } catch {}
-  try { await db.execute(sql`ALTER TABLE stored_guidelines ADD COLUMN IF NOT EXISTS source_sha text`); } catch {}
 }
 
 /** List all stored guidelines, most recently used first. */
@@ -60,7 +68,7 @@ export async function listGuidelines(): Promise<StoredGuideline[]> {
     .select()
     .from(storedGuidelines)
     .orderBy(desc(storedGuidelines.lastUsedAt), desc(storedGuidelines.updatedAt));
-  
+
   return rows.map((row) => ({
     id: row.id,
     name: row.name,
@@ -70,9 +78,13 @@ export async function listGuidelines(): Promise<StoredGuideline[]> {
     extractedText: row.extractedText,
     fileSizeBytes: row.fileSizeBytes,
     wordCount: row.wordCount,
-    sourceRepo: row.sourceRepo,
-    sourcePath: row.sourcePath,
-    sourceSha: row.sourceSha,
+    oasId: row.oasId ?? null,
+    oasVersion: row.oasVersion ?? null,
+    structuredFormat: row.structuredFormat ?? null,
+    lastSyncedAt: row.lastSyncedAt?.toISOString() ?? null,
+    sourceRepo: row.sourceRepo ?? null,
+    sourcePath: row.sourcePath ?? null,
+    sourceSha: row.sourceSha ?? null,
     useCount: row.useCount,
     lastUsedAt: row.lastUsedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
@@ -88,9 +100,9 @@ export async function getGuideline(id: string): Promise<StoredGuideline | null> 
     .from(storedGuidelines)
     .where(eq(storedGuidelines.id, id))
     .limit(1);
-  
+
   if (!row) return null;
-  
+
   return {
     id: row.id,
     name: row.name,
@@ -100,9 +112,13 @@ export async function getGuideline(id: string): Promise<StoredGuideline | null> 
     extractedText: row.extractedText,
     fileSizeBytes: row.fileSizeBytes,
     wordCount: row.wordCount,
-    sourceRepo: row.sourceRepo,
-    sourcePath: row.sourcePath,
-    sourceSha: row.sourceSha,
+    oasId: row.oasId ?? null,
+    oasVersion: row.oasVersion ?? null,
+    structuredFormat: row.structuredFormat ?? null,
+    lastSyncedAt: row.lastSyncedAt?.toISOString() ?? null,
+    sourceRepo: row.sourceRepo ?? null,
+    sourcePath: row.sourcePath ?? null,
+    sourceSha: row.sourceSha ?? null,
     useCount: row.useCount,
     lastUsedAt: row.lastUsedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
@@ -112,24 +128,26 @@ export async function getGuideline(id: string): Promise<StoredGuideline | null> 
 
 /** Store a new guideline. */
 export async function storeGuideline(input: {
-  id?: string;
   name: string;
   description?: string;
   originalFilename: string;
   contentType: string;
   extractedText: string;
   fileSizeBytes: number;
+  oasId?: string;
+  oasVersion?: string;
+  structuredFormat?: string;
   sourceRepo?: string;
   sourcePath?: string;
   sourceSha?: string;
 }): Promise<StoredGuideline> {
   await ensureGuidelinesTable();
-  
-  const id = input.id ?? randomUUID();
+
+  const id = randomUUID();
   const wordCount = input.extractedText
     ? input.extractedText.split(/\s+/).filter(Boolean).length
     : 0;
-  
+
   const [row] = await db
     .insert(storedGuidelines)
     .values({
@@ -141,28 +159,15 @@ export async function storeGuideline(input: {
       extractedText: input.extractedText,
       fileSizeBytes: input.fileSizeBytes,
       wordCount,
+      oasId: input.oasId ?? null,
+      oasVersion: input.oasVersion ?? null,
+      structuredFormat: input.structuredFormat ?? "4-area",
       sourceRepo: input.sourceRepo ?? null,
       sourcePath: input.sourcePath ?? null,
       sourceSha: input.sourceSha ?? null,
     })
-    .onConflictDoUpdate({
-      target: storedGuidelines.id,
-      set: {
-        name: input.name,
-        description: input.description ?? null,
-        originalFilename: input.originalFilename,
-        contentType: input.contentType,
-        extractedText: input.extractedText,
-        fileSizeBytes: input.fileSizeBytes,
-        wordCount,
-        sourceRepo: input.sourceRepo ?? null,
-        sourcePath: input.sourcePath ?? null,
-        sourceSha: input.sourceSha ?? null,
-        updatedAt: new Date(),
-      }
-    })
     .returning();
-  
+
   return {
     id: row.id,
     name: row.name,
@@ -172,9 +177,13 @@ export async function storeGuideline(input: {
     extractedText: row.extractedText,
     fileSizeBytes: row.fileSizeBytes,
     wordCount: row.wordCount,
-    sourceRepo: row.sourceRepo,
-    sourcePath: row.sourcePath,
-    sourceSha: row.sourceSha,
+    oasId: row.oasId ?? null,
+    oasVersion: row.oasVersion ?? null,
+    structuredFormat: row.structuredFormat ?? null,
+    lastSyncedAt: row.lastSyncedAt?.toISOString() ?? null,
+    sourceRepo: row.sourceRepo ?? null,
+    sourcePath: row.sourcePath ?? null,
+    sourceSha: row.sourceSha ?? null,
     useCount: row.useCount,
     lastUsedAt: row.lastUsedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
@@ -188,15 +197,15 @@ export async function updateGuideline(
   updates: { name?: string; description?: string }
 ): Promise<StoredGuideline | null> {
   await ensureGuidelinesTable();
-  
+
   const [row] = await db
     .update(storedGuidelines)
     .set({ ...updates, updatedAt: new Date() })
     .where(eq(storedGuidelines.id, id))
     .returning();
-  
+
   if (!row) return null;
-  
+
   return {
     id: row.id,
     name: row.name,
@@ -206,9 +215,13 @@ export async function updateGuideline(
     extractedText: row.extractedText,
     fileSizeBytes: row.fileSizeBytes,
     wordCount: row.wordCount,
-    sourceRepo: row.sourceRepo,
-    sourcePath: row.sourcePath,
-    sourceSha: row.sourceSha,
+    oasId: row.oasId ?? null,
+    oasVersion: row.oasVersion ?? null,
+    structuredFormat: row.structuredFormat ?? null,
+    lastSyncedAt: row.lastSyncedAt?.toISOString() ?? null,
+    sourceRepo: row.sourceRepo ?? null,
+    sourcePath: row.sourcePath ?? null,
+    sourceSha: row.sourceSha ?? null,
     useCount: row.useCount,
     lastUsedAt: row.lastUsedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
@@ -219,9 +232,7 @@ export async function updateGuideline(
 /** Delete a guideline. */
 export async function deleteGuideline(id: string): Promise<boolean> {
   await ensureGuidelinesTable();
-  const result = await db
-    .delete(storedGuidelines)
-    .where(eq(storedGuidelines.id, id));
+  await db.delete(storedGuidelines).where(eq(storedGuidelines.id, id));
   return true;
 }
 
@@ -244,44 +255,4 @@ export async function buildBundleFromSources(options: {
     encoding?: "utf8" | "base64";
     content: string;
   }>;
-}): Promise<{ text: string; sourceIds: string[] }> {
-  const parts: string[] = [];
-  const sourceIds: string[] = [];
-  
-  // Add freeform text
-  if (options.freeformText?.trim()) {
-    parts.push(`FREEFORM GUIDELINES\n${options.freeformText.trim()}`);
-  }
-  
-  // Add stored guidelines
-  if (options.storedIds?.length) {
-    for (const id of options.storedIds) {
-      const guideline = await getGuideline(id);
-      if (guideline) {
-        parts.push(`GUIDELINE: ${guideline.name}\n${guideline.extractedText}`);
-        sourceIds.push(id);
-      }
-    }
-  }
-  
-  // Add ad-hoc documents (extract on the fly)
-  if (options.adhocDocuments?.length) {
-    const { extractGuidelineDocument } = await import("./document-extract");
-    for (const doc of options.adhocDocuments) {
-      try {
-        const extracted = await extractGuidelineDocument({
-          name: doc.name,
-          contentType: doc.contentType,
-          content: doc.content,
-          encoding: doc.encoding,
-        });
-        parts.push(`GUIDELINE: ${doc.name}\n${extracted.text}`);
-      } catch {
-        // skip invalid documents
-      }
-    }
-  }
-  
-  const text = parts.join("\n\n--- GUIDELINE BOUNDARY ---\n\n");
-  return { text, sourceIds };
-}
+}): Promise<{ text: 
