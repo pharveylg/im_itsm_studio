@@ -81,3 +81,17 @@ export const storedGuidelines = pgTable("stored_guidelines", {
 });
 
 export type StoredGuidelineRow = typeof storedGuidelines.$inferSelect;
+
+/**
+ * GitHub repository configuration for guideline sync.
+ */
+export const githubConfig = pgTable("github_config", {
+  id: integer("id").primaryKey().default(1),
+  owner: text("owner").notNull(),
+  repo: text("repo").notNull(),
+  branch: text("branch").notNull().default("main"),
+  pat: text("pat"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type GithubConfigRow = typeof githubConfig.$inferSelect;
