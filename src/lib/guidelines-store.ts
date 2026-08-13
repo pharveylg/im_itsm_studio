@@ -246,50 +246,83 @@ export async function markGuidelineUsed(id: string): Promise<void> {
 }
 
 /** Build a guideline bundle from stored IDs + optional freeform text + optional ad-hoc documents. */
-export async function buildBundleFromSources(options: {
-  storedIds?: string[];
-  freeformText?: string;
-  adhocDocuments?: Array<{
-    name: string;
-    contentType?: string;
-    encoding?: "utf8" | "base64";
-    content: string;
-  }>;
-}): Promise<{ text: string; sourceIds: string[] }> {
-  const parts: string[] = [];
-  const sourceIds: string[] = [];
+export async function syncGithubRepository(): Promise<SyncResult> {
+  const logs: string[] = [];
+  const log = (msg: string) => { console.log(`[GitHub Sync] ${msg}`); logs.push(msg); };
 
-  if (options.freeformText?.trim()) {
-    parts.push(`FREEFORM GUIDELINES\n${options.freeformText.trim()}`);
-  }
-
-  if (options.storedIds?.length) {
-    for (const id of options.storedIds) {
-      const guideline = await getGuideline(id);
-      if (guideline) {
-        parts.push(`GUIDELINE: ${guideline.name}\n${guideline.extractedText}`);
-        sourceIds.push(id);
-      }
+  try {
+    const config = await getGithubConfig();
+    if (!config.owner || !config.repo || !config.pat) {
+      return { ok: false, added: 0, updated: 0, removed: 0, skipped: 0, error: "GitHub configuration is incomplete.", logs };
     }
-  }
 
-  if (options.adhocDocuments?.length) {
-    const { extractGuidelineDocument } = await import("./document-extract");
-    for (const doc of options.adhocDocuments) {
+    const headers = {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${config.pat}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+      "User-Agent": "ITSM-Analysis-Studio",
+    };
+
+    const repoRef = `${config.owner}/${config.repo}`;
+    log(`Starting sync for ${repoRef}`);
+
+    const treeUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/git/trees/${config.branch}?recursive=1`;
+    const treeRes = await fetch(treeUrl, { headers });
+    if (!treeRes.ok) throw new Error(`GitHub API error: ${treeRes.status}`);
+
+    const treeData: any = await treeRes.json();
+    const supported = [".xml", ".docx", ".pdf", ".txt", ".md", ".markdown"];
+
+    const files = (treeData.tree ?? []).filter((f: any) =>
+      f.type === "blob" && supported.some(ext => f.path.toLowerCase().endsWith(ext))
+    );
+
+    log(`Found ${files.length} supported files.`);
+
+    let added = 0, updated = 0, skipped = 0;
+
+    for (const file of files) {
+      const filename = file.path.split("/").pop() ?? "unnamed";
+      const name = filename.replace(/\.[^.]+$/, "").replace(/[_-]/g, " ");
+
+      const ext = filename.toLowerCase().split(".").pop() ?? "";
+      let contentType = "text/plain";
+      if (ext === "pdf") contentType = "application/pdf";
+      if (ext === "docx") contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      if (ext === "xml") contentType = "text/xml";
+
       try {
+        const blobRes = await fetch(file.url, { headers });
+        const blob: any = await blobRes.json();
+
         const extracted = await extractGuidelineDocument({
-          name: doc.name,
-          contentType: doc.contentType,
-          content: doc.content,
-          encoding: doc.encoding,
+          name: filename,
+          contentType,
+          content: blob.content,
+          encoding: "base64",
         });
-        parts.push(`GUIDELINE: ${doc.name}\n${extracted.text}`);
-      } catch {
-        // skip invalid documents
+
+        const size = file.size ?? Math.floor((blob.content.length * 3) / 4);
+
+        await storeGuideline({
+          name,
+          description: `Synced from GitHub: ${file.path}`,
+          originalFilename: filename,
+          contentType,
+          extractedText: extracted.text,
+          fileSizeBytes: size,
+        });
+
+        added++;
+        log(`Added: ${file.path}`);
+      } catch (e) {
+        log(`Failed: ${file.path}`);
       }
     }
-  }
 
-  const text = parts.join("\n\n--- GUIDELINE BOUNDARY ---\n\n");
-  return { text, sourceIds };
+    return { ok: true, added, updated, removed: 0, skipped, logs };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "Sync failed";
+    return { ok: false, added: 0, updated: 0, removed: 0, skipped: 0, error: msg, logs };
+  }
 }
