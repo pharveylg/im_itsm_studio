@@ -50,51 +50,28 @@ export const storedGuidelines = pgTable("stored_guidelines", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   description: text("description"),
+
   // Original file info
   originalFilename: text("original_filename").notNull(),
   contentType: text("content_type").notNull(),
+
   // Extracted text content (pre-computed for fast reuse)
   extractedText: text("extracted_text").notNull(),
+
   // Metadata
   fileSizeBytes: integer("file_size_bytes").notNull(),
   wordCount: integer("word_count").default(0),
+
+  // OAS Metadata
+  oasId: text("oas_id"),
+  oasVersion: text("oas_version"),
+  structuredFormat: text("structured_format").default("4-area"),
+  lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+
   // GitHub Sync Tracking
   sourceRepo: text("source_repo"),
   sourcePath: text("source_path"),
   sourceSha: text("source_sha"),
-  // Usage tracking
-  useCount: integer("use_count").default(0),
-  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
-export const storedGuidelines = pgTable("stored_guidelines", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  description: text("description"),
-
-  // Original file info
-  originalFilename: text("original_filename").notNull(),
-  contentType: text("content_type").notNull(),
-
-  // Extracted text content
-  extractedText: text("extracted_text").notNull(),
-
-  // Metadata
-  fileSizeBytes: integer("file_size_bytes").notNull(),
-  wordCount: integer("word_count").default(0),
-
-  // === OAS Metadata (added Aug 2026) ===
-  oasId: text("oas_id"),                          // e.g. "OAS-201"
-  oasVersion: text("oas_version"),                // e.g. "1.2"
-  structuredFormat: text("structured_format").default("4-area"),
-  lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
-
-  // === GitHub Sync Tracking ===
-  sourceRepo: text("source_repo"),
-  sourcePath: text("source_path"),
-  sourceSha: text("source_sha"),
 
   // Usage tracking
   useCount: integer("use_count").default(0),
@@ -102,3 +79,5 @@ export const storedGuidelines = pgTable("stored_guidelines", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export type StoredGuidelineRow = typeof storedGuidelines.$inferSelect;
