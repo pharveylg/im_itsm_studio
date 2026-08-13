@@ -179,8 +179,8 @@ export async function syncGithubRepository(): Promise<SyncResult> {
           sourceRepo: repoRef,
           sourcePath: file.path,
           sourceSha: file.sha,
-          oasId: null,
-          oasVersion: null,
+          oasId: undefined,
+          oasVersion: undefined,
           structuredFormat: "4-area",
         });
 
