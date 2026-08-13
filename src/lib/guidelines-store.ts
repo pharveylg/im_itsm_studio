@@ -148,4 +148,148 @@ export async function storeGuideline(input: {
     ? input.extractedText.split(/\s+/).filter(Boolean).length
     : 0;
 
-  const [row] = await 
+  const [row] = await db
+    .insert(storedGuidelines)
+    .values({
+      id,
+      name: input.name,
+      description: input.description ?? null,
+      originalFilename: input.originalFilename,
+      contentType: input.contentType,
+      extractedText: input.extractedText,
+      fileSizeBytes: input.fileSizeBytes,
+      wordCount,
+      oasId: input.oasId ?? null,
+      oasVersion: input.oasVersion ?? null,
+      structuredFormat: input.structuredFormat ?? "4-area",
+      sourceRepo: input.sourceRepo ?? null,
+      sourcePath: input.sourcePath ?? null,
+      sourceSha: input.sourceSha ?? null,
+    })
+    .returning();
+
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    originalFilename: row.originalFilename,
+    contentType: row.contentType,
+    extractedText: row.extractedText,
+    fileSizeBytes: row.fileSizeBytes,
+    wordCount: row.wordCount,
+    oasId: row.oasId ?? null,
+    oasVersion: row.oasVersion ?? null,
+    structuredFormat: row.structuredFormat ?? null,
+    lastSyncedAt: row.lastSyncedAt?.toISOString() ?? null,
+    sourceRepo: row.sourceRepo ?? null,
+    sourcePath: row.sourcePath ?? null,
+    sourceSha: row.sourceSha ?? null,
+    useCount: row.useCount,
+    lastUsedAt: row.lastUsedAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+/** Update a guideline's metadata. */
+export async function updateGuideline(
+  id: string,
+  updates: { name?: string; description?: string }
+): Promise<StoredGuideline | null> {
+  await ensureGuidelinesTable();
+
+  const [row] = await db
+    .update(storedGuidelines)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(storedGuidelines.id, id))
+    .returning();
+
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    originalFilename: row.originalFilename,
+    contentType: row.contentType,
+    extractedText: row.extractedText,
+    fileSizeBytes: row.fileSizeBytes,
+    wordCount: row.wordCount,
+    oasId: row.oasId ?? null,
+    oasVersion: row.oasVersion ?? null,
+    structuredFormat: row.structuredFormat ?? null,
+    lastSyncedAt: row.lastSyncedAt?.toISOString() ?? null,
+    sourceRepo: row.sourceRepo ?? null,
+    sourcePath: row.sourcePath ?? null,
+    sourceSha: row.sourceSha ?? null,
+    useCount: row.useCount,
+    lastUsedAt: row.lastUsedAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+/** Delete a guideline. */
+export async function deleteGuideline(id: string): Promise<boolean> {
+  await ensureGuidelinesTable();
+  await db.delete(storedGuidelines).where(eq(storedGuidelines.id, id));
+  return true;
+}
+
+/** Increment use count and update lastUsedAt. */
+export async function markGuidelineUsed(id: string): Promise<void> {
+  await ensureGuidelinesTable();
+  await db
+    .update(storedGuidelines)
+    .set({ useCount: sql`${storedGuidelines.useCount} + 1`, lastUsedAt: new Date() })
+    .where(eq(storedGuidelines.id, id));
+}
+
+/** Build a guideline bundle from stored IDs + optional freeform text + optional ad-hoc documents. */
+export async function buildBundleFromSources(options: {
+  storedIds?: string[];
+  freeformText?: string;
+  adhocDocuments?: Array<{
+    name: string;
+    contentType?: string;
+    encoding?: "utf8" | "base64";
+    content: string;
+  }>;
+}): Promise<{ text: string; sourceIds: string[] }> {
+  const parts: string[] = [];
+  const sourceIds: string[] = [];
+
+  if (options.freeformText?.trim()) {
+    parts.push(`FREEFORM GUIDELINES\n${options.freeformText.trim()}`);
+  }
+
+  if (options.storedIds?.length) {
+    for (const id of options.storedIds) {
+      const guideline = await getGuideline(id);
+      if (guideline) {
+        parts.push(`GUIDELINE: ${guideline.name}\n${guideline.extractedText}`);
+        sourceIds.push(id);
+      }
+    }
+  }
+
+  if (options.adhocDocuments?.length) {
+    const { extractGuidelineDocument } = await import("./document-extract");
+    for (const doc of options.adhocDocuments) {
+      try {
+        const extracted = await extractGuidelineDocument({
+          name: doc.name,
+          contentType: doc.contentType,
+          content: doc.content,
+          encoding: doc.encoding,
+        });
+        parts.push(`GUIDELINE: ${doc.name}\n${extracted.text}`);
+      } catch {
+        // skip invalid documents
+      }
+    }
+  }
+
+  const text = parts.join("\n\n--- GUIDELINE BOUNDARY ---\n\n");
+  return { text, sourceIds };
+}
