@@ -164,6 +164,22 @@ export async function POST(request: Request) {
         encoding: binary ? "base64" : "utf8",
       });
 
+      // Detect OAS metadata from filename or content
+      let oasId: string | undefined;
+      let oasVersion: string | undefined;
+      let structuredFormat = "4-area";
+
+      const oasMatch = filename.match(/OAS-(\d{3})/i);
+      if (oasMatch) {
+        oasId = `OAS-${oasMatch[1]}`;
+        
+        // Try to extract version from content
+        const versionMatch = extracted.text.match(/version:\s*["']?(\d+\.\d+)["']?/i);
+        if (versionMatch) {
+          oasVersion = versionMatch[1];
+        }
+      }
+
       const guideline = await storeGuideline({
         name: body.name.trim(),
         description: body.description?.trim() || undefined,
@@ -171,6 +187,9 @@ export async function POST(request: Request) {
         contentType: body.contentType || "application/octet-stream",
         extractedText: extracted.text,
         fileSizeBytes: fileBuffer.byteLength,
+        oasId,
+        oasVersion,
+        structuredFormat,
       });
 
       await db.execute(sql`

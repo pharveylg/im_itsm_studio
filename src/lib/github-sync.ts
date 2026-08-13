@@ -4,10 +4,9 @@
 
 import { db } from "@/db";
 import { githubConfig, storedGuidelines } from "@/db/schema";
-import { eq, sql, and } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { extractGuidelineDocument } from "./document-extract";
 import { storeGuideline } from "./guidelines-store";
-import { randomUUID } from "node:crypto";
 
 export type GithubConfig = {
   owner: string;
@@ -87,7 +86,7 @@ export async function saveGithubConfig(
 export async function syncGithubRepository(): Promise<SyncResult> {
   const logs: string[] = [];
   const log = (msg: string) => { console.log(`[GitHub Sync] ${msg}`); logs.push(msg); };
-  
+
   try {
     const config = await getGithubConfig();
     if (!config.owner || !config.repo || !config.pat) {
@@ -104,37 +103,26 @@ export async function syncGithubRepository(): Promise<SyncResult> {
     const repoRef = `${config.owner}/${config.repo}`;
     log(`Starting sync for ${repoRef}@${config.branch}`);
 
-    // 1. Get the repository tree recursively
     const treeUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/git/trees/${config.branch}?recursive=1`;
     const treeResponse = await fetch(treeUrl, { headers });
-    
+
     if (!treeResponse.ok) {
-      if (treeResponse.status === 404) {
-        throw new Error(`Repository or branch not found. Check permissions and branch name.`);
-      }
-      if (treeResponse.status === 401) {
-        throw new Error(`Authentication failed. Check if the PAT has correct permissions.`);
-      }
-      throw new Error(`GitHub API error: ${treeResponse.status} ${await treeResponse.text()}`);
+      if (treeResponse.status === 404) throw new Error("Repository or branch not found.");
+      if (treeResponse.status === 401) throw new Error("Authentication failed. Check PAT permissions.");
+      throw new Error(`GitHub API error: ${treeResponse.status}`);
     }
 
-    const treeData = await treeResponse.json() as { tree?: Array<{ path: string, mode: string, type: string, sha: string, size?: number, url: string }>, truncated?: boolean };
-    
-    if (treeData.truncated) {
-      log("Warning: Repository tree was truncated by GitHub API limit.");
-    }
+    const treeData: any = await treeResponse.json();
+    if (treeData.truncated) log("Warning: Repository tree was truncated.");
 
-    // Supported extensions matching the existing upload logic
     const supportedExts = [".xml", ".docx", ".pdf", ".txt", ".md", ".markdown"];
-    
-    const validFiles = (treeData.tree ?? []).filter(item => 
-      item.type === "blob" && 
-      supportedExts.some(ext => item.path.toLowerCase().endsWith(ext))
+
+    const validFiles = (treeData.tree ?? []).filter((item: any) =>
+      item.type === "blob" && supportedExts.some(ext => item.path.toLowerCase().endsWith(ext))
     );
 
-    log(`Found ${validFiles.length} supported documents in tree.`);
+    log(`Found ${validFiles.length} supported documents.`);
 
-    // 2. Load existing guidelines from this repo
     const existingRows = await db
       .select({ id: storedGuidelines.id, sourcePath: storedGuidelines.sourcePath, sourceSha: storedGuidelines.sourceSha })
       .from(storedGuidelines)
@@ -143,8 +131,6 @@ export async function syncGithubRepository(): Promise<SyncResult> {
     const existingMap = new Map(existingRows.map(r => [r.sourcePath, { id: r.id, sha: r.sourceSha }]));
 
     let added = 0, updated = 0, removed = 0, skipped = 0;
-
-    // 3. Process each file
     const activePaths = new Set<string>();
 
     for (const file of validFiles) {
@@ -157,28 +143,18 @@ export async function syncGithubRepository(): Promise<SyncResult> {
       }
 
       log(`Fetching: ${file.path}`);
-      
-      // Fetch blob
-      const blobResponse = await fetch(file.url, { headers });
-      if (!blobResponse.ok) {
-        log(`Failed to fetch blob for ${file.path}: ${blobResponse.status}`);
-        continue;
-      }
 
-      const blobData = await blobResponse.json() as { content: string, encoding: string };
-      
-      if (blobData.encoding !== "base64") {
-        log(`Unsupported encoding ${blobData.encoding} for ${file.path}`);
-        continue;
-      }
+      const blobResponse = await fetch(file.url, { headers });
+      if (!blobResponse.ok) continue;
+
+      const blobData: any = await blobResponse.json();
+      if (blobData.encoding !== "base64") continue;
 
       const ext = file.path.toLowerCase().split(".").pop() ?? "";
-      const isBinary = ext === "pdf" || ext === "docx";
-      let contentType = "application/octet-stream";
+      let contentType = "text/plain";
       if (ext === "pdf") contentType = "application/pdf";
       else if (ext === "docx") contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
       else if (ext === "xml") contentType = "text/xml";
-      else if (ext === "md" || ext === "markdown" || ext === "txt") contentType = "text/plain";
 
       const filename = file.path.split("/").pop() ?? "unnamed";
       const name = filename.replace(/\.[^.]+$/, "").replace(/[_-]/g, " ");
@@ -191,11 +167,9 @@ export async function syncGithubRepository(): Promise<SyncResult> {
           encoding: "base64",
         });
 
-        // Calculate file size from base64 string (approximate original size)
         const sizeBytes = file.size ?? Math.floor((blobData.content.length * 3) / 4);
 
         await storeGuideline({
-          id: existing ? existing.id : randomUUID(),
           name,
           description: `Synced from ${repoRef}: ${file.path}`,
           originalFilename: filename,
@@ -205,20 +179,24 @@ export async function syncGithubRepository(): Promise<SyncResult> {
           sourceRepo: repoRef,
           sourcePath: file.path,
           sourceSha: file.sha,
+          oasId: null,
+          oasVersion: null,
+          structuredFormat: "4-area",
         });
 
         if (existing) updated++;
         else added++;
+
         log(`Successfully ${existing ? "updated" : "added"}: ${file.path}`);
 
       } catch (err) {
-        log(`Error processing ${file.path}: ${err instanceof Error ? err.message : String(err)}`);
+        log(`Error processing ${file.path}`);
       }
     }
 
-    // 4. Remove files that no longer exist in the repo
+    // Remove deleted files
     for (const [path, info] of existingMap.entries()) {
-      if (!path || !activePaths.has(path)) {
+      if (!activePaths.has(path)) {
         await db.delete(storedGuidelines).where(eq(storedGuidelines.id, info.id));
         log(`Removed deleted file: ${path}`);
         removed++;

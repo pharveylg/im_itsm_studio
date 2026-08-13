@@ -260,6 +260,12 @@ export function GuidelinesManager({
                     <p className="truncate text-[10px] text-ink/45">
                       {g.originalFilename} · {g.wordCount ?? 0} words · used {g.useCount ?? 0}x
                     </p>
+                    {g.oasId && (
+                      <p className="mt-0.5 text-[10px] font-mono text-pine/80">
+                        {g.oasId} {g.oasVersion && `v${g.oasVersion}`} 
+                        {g.structuredFormat === "4-area" && " · Structured"}
+                      </p>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -375,6 +381,12 @@ export function GuidelinesManager({
                   {g.originalFilename} · {formatBytes(g.fileSizeBytes)} · {g.wordCount ?? 0} words · used {g.useCount ?? 0}×
                   {g.lastUsedAt && <> · last {new Date(g.lastUsedAt).toLocaleDateString()}</>}
                 </p>
+                {g.oasId && (
+                  <p className="mt-0.5 text-[11px] font-mono text-pine">
+                    {g.oasId} {g.oasVersion && `v${g.oasVersion}`} 
+                    {g.structuredFormat === "4-area" && " · Structured Report"}
+                  </p>
+                )}
               </div>
               <button
                 type="button"
