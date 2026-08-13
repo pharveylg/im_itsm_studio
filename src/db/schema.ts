@@ -3,8 +3,6 @@ import type { AiProviderConfig } from "@/lib/ai-providers";
 
 /**
  * Single-row draft of the ServiceNow REST API connection settings.
- * Populated from the Connection console; read server-side only.
- * The client secret is stored but never returned to the browser.
  */
 export const connectionConfig = pgTable("connection_config", {
   id: integer("id").primaryKey().default(1),
@@ -14,65 +12,38 @@ export const connectionConfig = pgTable("connection_config", {
   redirectUri: text("redirect_uri").notNull(),
   authMethod: text("auth_method").notNull().default("pkce"),
   scope: text("scope").notNull().default("useraccount"),
-  // Added fields to support the live ServiceNow service account credentials securely
   serviceUsername: text("service_username"),
   servicePassword: text("service_password"),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   tokenExpiresAt: timestamp("token_expires_at", { withTimezone: true }),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export type ConnectionConfigRow = typeof connectionConfig.$inferSelect;
 
 /**
  * AI provider configurations.
- * Stores multiple provider configs; one can be marked as default.
  */
 export const aiProviderConfigs = pgTable("ai_provider_configs", {
-  id: text("id").primaryKey(), // provider key (openai, anthropic, etc.)
+  id: text("id").primaryKey(),
   config: jsonb("config").$type<AiProviderConfig>().notNull(),
-  isDefault: integer("is_default").default(0), // 1 = default
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  isDefault: integer("is_default").default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export type AiProviderConfigRow = typeof aiProviderConfigs.$inferSelect;
 
 /**
- * GitHub repository configuration for guideline sync.
- */
-export const githubConfig = pgTable("github_config", {
-  id: integer("id").primaryKey().default(1),
-  owner: text("owner").notNull(),
-  repo: text("repo").notNull(),
-  branch: text("branch").notNull().default("main"),
-  pat: text("pat"),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
-export type GithubConfigRow = typeof githubConfig.$inferSelect;
-
-/**
- * Stored guideline documents for reuse across analyses.
- * The original file content is preserved so it can be re-extracted on demand.
+ * Stored guideline documents.
  */
 export const storedGuidelines = pgTable("stored_guidelines", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   description: text("description"),
-
-  // Original file info
   originalFilename: text("original_filename").notNull(),
   contentType: text("content_type").notNull(),
-
-  // Extracted text content (pre-computed for fast reuse)
   extractedText: text("extracted_text").notNull(),
-
-  // Metadata
   fileSizeBytes: integer("file_size_bytes").notNull(),
   wordCount: integer("word_count").default(0),
 
@@ -87,7 +58,6 @@ export const storedGuidelines = pgTable("stored_guidelines", {
   sourcePath: text("source_path"),
   sourceSha: text("source_sha"),
 
-  // Usage tracking
   useCount: integer("use_count").default(0),
   lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -97,7 +67,7 @@ export const storedGuidelines = pgTable("stored_guidelines", {
 export type StoredGuidelineRow = typeof storedGuidelines.$inferSelect;
 
 /**
- * GitHub repository configuration for guideline sync.
+ * GitHub repository configuration.
  */
 export const githubConfig = pgTable("github_config", {
   id: integer("id").primaryKey().default(1),
