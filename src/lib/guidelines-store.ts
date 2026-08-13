@@ -255,4 +255,41 @@ export async function buildBundleFromSources(options: {
     encoding?: "utf8" | "base64";
     content: string;
   }>;
-}): Promise<{ text: 
+}): Promise<{ text: string; sourceIds: string[] }> {
+  const parts: string[] = [];
+  const sourceIds: string[] = [];
+
+  if (options.freeformText?.trim()) {
+    parts.push(`FREEFORM GUIDELINES\n${options.freeformText.trim()}`);
+  }
+
+  if (options.storedIds?.length) {
+    for (const id of options.storedIds) {
+      const guideline = await getGuideline(id);
+      if (guideline) {
+        parts.push(`GUIDELINE: ${guideline.name}\n${guideline.extractedText}`);
+        sourceIds.push(id);
+      }
+    }
+  }
+
+  if (options.adhocDocuments?.length) {
+    const { extractGuidelineDocument } = await import("./document-extract");
+    for (const doc of options.adhocDocuments) {
+      try {
+        const extracted = await extractGuidelineDocument({
+          name: doc.name,
+          contentType: doc.contentType,
+          content: doc.content,
+          encoding: doc.encoding,
+        });
+        parts.push(`GUIDELINE: ${doc.name}\n${extracted.text}`);
+      } catch {
+        // skip invalid documents
+      }
+    }
+  }
+
+  const text = parts.join("\n\n--- GUIDELINE BOUNDARY ---\n\n");
+  return { text, sourceIds };
+}
