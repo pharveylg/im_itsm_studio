@@ -196,7 +196,7 @@ export async function syncGithubRepository(): Promise<SyncResult> {
 
     // Remove deleted files
     for (const [path, info] of existingMap.entries()) {
-      if (!activePaths.has(path)) {
+      if (path && !activePaths.has(path)) {
         await db.delete(storedGuidelines).where(eq(storedGuidelines.id, info.id));
         log(`Removed deleted file: ${path}`);
         removed++;
