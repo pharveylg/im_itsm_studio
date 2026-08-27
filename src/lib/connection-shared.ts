@@ -57,7 +57,8 @@ export function validateSettings(input: ConnectionSettings): string[] {
     errors.push("Instance URL must look like https://yourinstance.service-now.com");
   }
 
-  if (!/^https?:\/\//i.test(input.redirectUri.trim())) {
+  const redirectRequired = input.authMethod === "pkce" || input.authMethod === "client_secret";
+  if (redirectRequired && !/^https?:\/\//i.test(input.redirectUri.trim())) {
     errors.push("Redirect URI must be an absolute http(s) URL.");
   }
 

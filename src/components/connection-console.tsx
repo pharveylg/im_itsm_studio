@@ -472,25 +472,27 @@ export function ConnectionConsole({
               </div>
             </div>
 
-            <div>
-              <label className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/55">
-                Redirect URI — register this exact value in ServiceNow
-              </label>
-              <div className="mt-2 flex gap-2">
-                <input
-                  value={redirectUri}
-                  onChange={(event) => setRedirectUri(event.target.value)}
-                  className={`${inputCls} font-mono text-[12px]`}
-                />
-                <button
-                  type="button"
-                  onClick={copyRedirect}
-                  className="shrink-0 rounded-xl border border-pine/30 bg-pine px-4 font-mono text-[11px] font-semibold text-paper transition-all hover:bg-pine-soft active:scale-95"
-                >
-                  {copied ? "COPIED ✓" : "COPY"}
-                </button>
+            {(authMethod === "pkce" || authMethod === "client_secret") && (
+              <div>
+                <label className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/55">
+                  Redirect URI — register this exact value in ServiceNow
+                </label>
+                <div className="mt-2 flex gap-2">
+                  <input
+                    value={redirectUri}
+                    onChange={(event) => setRedirectUri(event.target.value)}
+                    className={`${inputCls} font-mono text-[12px]`}
+                  />
+                  <button
+                    type="button"
+                    onClick={copyRedirect}
+                    className="shrink-0 rounded-xl border border-pine/30 bg-pine px-4 font-mono text-[11px] font-semibold text-paper transition-all hover:bg-pine-soft active:scale-95"
+                  >
+                    {copied ? "COPIED ✓" : "COPY"}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="flex flex-wrap items-center gap-4 border-t border-line pt-5">
               <button
