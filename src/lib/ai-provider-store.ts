@@ -21,6 +21,14 @@ export async function ensureProviderTable(): Promise<void> {
       updated_at timestamptz NOT NULL DEFAULT now()
     )
   `);
+
+  // CREATE TABLE IF NOT EXISTS is a no-op on an already-existing table, so
+  // nullable/defaulted columns added here after first deploy must be
+  // backfilled explicitly or they silently never reach the live database.
+  await db.execute(sql`
+    ALTER TABLE ai_provider_configs
+      ADD COLUMN IF NOT EXISTS is_default integer DEFAULT 0
+  `);
 }
 
 /** Get all provider configs. */

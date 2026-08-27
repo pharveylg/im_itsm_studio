@@ -59,6 +59,24 @@ export async function ensureGuidelinesTable(): Promise<void> {
       updated_at timestamptz NOT NULL DEFAULT now()
     )
   `);
+
+  // CREATE TABLE IF NOT EXISTS is a no-op on an already-existing table, so
+  // nullable/defaulted columns added here after first deploy must be
+  // backfilled explicitly or they silently never reach the live database.
+  await db.execute(sql`
+    ALTER TABLE stored_guidelines
+      ADD COLUMN IF NOT EXISTS description text,
+      ADD COLUMN IF NOT EXISTS word_count integer DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS oas_id text,
+      ADD COLUMN IF NOT EXISTS oas_version text,
+      ADD COLUMN IF NOT EXISTS structured_format text DEFAULT '4-area',
+      ADD COLUMN IF NOT EXISTS last_synced_at timestamptz,
+      ADD COLUMN IF NOT EXISTS source_repo text,
+      ADD COLUMN IF NOT EXISTS source_path text,
+      ADD COLUMN IF NOT EXISTS source_sha text,
+      ADD COLUMN IF NOT EXISTS use_count integer DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS last_used_at timestamptz
+  `);
 }
 
 /** List all stored guidelines, most recently used first. */

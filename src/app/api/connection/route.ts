@@ -40,7 +40,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, errors }, { status: 422 });
   }
 
-  await saveConnectionSettings(settings);
-  const state = await getConnectionState();
-  return NextResponse.json({ ok: true, state });
+  try {
+    await saveConnectionSettings(settings);
+    const state = await getConnectionState();
+    return NextResponse.json({ ok: true, state });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to save connection settings.";
+    return NextResponse.json({ ok: false, errors: [message] }, { status: 500 });
+  }
 }

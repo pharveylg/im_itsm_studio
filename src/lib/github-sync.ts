@@ -37,6 +37,15 @@ export async function ensureGithubTable(): Promise<void> {
       updated_at timestamptz NOT NULL DEFAULT now()
     )
   `);
+
+  // CREATE TABLE IF NOT EXISTS is a no-op on an already-existing table, so
+  // nullable/defaulted columns added here after first deploy must be
+  // backfilled explicitly or they silently never reach the live database.
+  await db.execute(sql`
+    ALTER TABLE github_config
+      ADD COLUMN IF NOT EXISTS branch text NOT NULL DEFAULT 'main',
+      ADD COLUMN IF NOT EXISTS pat text
+  `);
 }
 
 export async function getGithubConfig(): Promise<GithubConfig> {

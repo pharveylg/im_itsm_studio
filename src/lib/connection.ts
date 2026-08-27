@@ -29,6 +29,18 @@ export async function ensureConnectionTable(): Promise<void> {
       updated_at timestamptz NOT NULL DEFAULT now()
     )
   `);
+
+  // CREATE TABLE IF NOT EXISTS is a no-op on an already-existing table, so
+  // columns added here after the table's first deploy must be backfilled
+  // explicitly or they silently never reach the live database.
+  await db.execute(sql`
+    ALTER TABLE connection_config
+      ADD COLUMN IF NOT EXISTS service_username text,
+      ADD COLUMN IF NOT EXISTS service_password text,
+      ADD COLUMN IF NOT EXISTS access_token text,
+      ADD COLUMN IF NOT EXISTS refresh_token text,
+      ADD COLUMN IF NOT EXISTS token_expires_at timestamptz
+  `);
 }
 
 export async function getConnectionState(): Promise<PublicConnectionState> {
