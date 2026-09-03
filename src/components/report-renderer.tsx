@@ -33,9 +33,15 @@ function FlagBadge({ flag }: { flag: FlagToken }) {
   );
 }
 
+const INLINE_OR_BLOCK_HTML = /<(?:table|tr|td|th|h[1-6]|p|ul|ol|li|div|strong|em|b|i|br|code|span|a)\b/i;
+
+function hasRenderableMarkup(text: string): boolean {
+  return INLINE_OR_BLOCK_HTML.test(text) || normalizeReportHtml(text) !== text;
+}
+
 function FlaggedLine({ line }: { line: ParsedLine }) {
   if (!line.flag) {
-    if (/<(?:table|tr|td|th|h[1-6]|p|ul|ol|li|div)\b/i.test(line.text)) {
+    if (hasRenderableMarkup(line.text)) {
       return (
         <div
           className="text-justify text-sm leading-6 text-ink/80 [&_table]:w-full [&_table]:table-fixed [&_th]:bg-slate-100"
@@ -49,7 +55,14 @@ function FlaggedLine({ line }: { line: ParsedLine }) {
   return (
     <div className="flex gap-2.5">
       <div className="shrink-0 pt-0.5"><FlagBadge flag={line.flag} /></div>
-      <p className="min-w-0 flex-1 text-justify text-sm leading-6 text-ink/90">{line.text}</p>
+      {hasRenderableMarkup(line.text) ? (
+        <div
+          className="min-w-0 flex-1 text-justify text-sm leading-6 text-ink/90 [&_table]:w-full [&_table]:table-fixed [&_th]:bg-slate-100"
+          dangerouslySetInnerHTML={{ __html: normalizeReportHtml(line.text) }}
+        />
+      ) : (
+        <p className="min-w-0 flex-1 text-justify text-sm leading-6 text-ink/90">{line.text}</p>
+      )}
     </div>
   );
 }
@@ -274,8 +287,7 @@ function BlockContent({
     );
   }
 
-  const hasHtml = /<(?:table|tr|td|th|h[1-6]|p|ul|ol|li|div)\b/i.test(content);
-  if (hasHtml || normalizeReportHtml(content) !== content) {
+  if (hasRenderableMarkup(content)) {
     return (
       <div
         className="prose prose-sm max-w-none text-justify [&_table]:w-full [&_table]:table-fixed [&_th]:bg-slate-100 [&_td]:break-words [&_th]:break-words"

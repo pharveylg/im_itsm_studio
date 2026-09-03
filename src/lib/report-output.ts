@@ -163,10 +163,10 @@ export function normalizeReportHtml(value: string): string {
   );
 
   return html.replace(
-    /<table(?![^>]*style=)/gi,
+    /<table\b(?![^>]*style=)/gi,
     '<table style="width:100%;table-layout:fixed;border-collapse:collapse;"',
   ).replace(
-    /<(td|th)(?![^>]*style=)/gi,
+    /<(td|th)\b(?![^>]*style=)/gi,
     '<$1 style="word-wrap:break-word;padding:8px;border:1px solid #d2dcc3;vertical-align:top;"',
   );
 }
@@ -221,8 +221,8 @@ export function fixMarkdownTables(html: string): string {
       const parseRow = (row: string) =>
         row.split("|").slice(1, -1).map((cell: string) => cell.trim());
 
-      // Detect and skip the separator row
-      const isSeparator = (row: string) => /^\|[\s:-]+\|$/.test(row.trim());
+      // Detect and skip the separator row (e.g. |---|:---:|---|)
+      const isSeparator = (row: string) => /^\|[-:\s|]+\|$/.test(row.trim());
       const headerCells = parseRow(rows[0]);
       const dataRows = rows.filter((r: string, i: number) => i > 0 && !isSeparator(r));
 
